@@ -1,26 +1,30 @@
-import { Dispatch, FC, SetStateAction, useRef, useState } from 'react';
+import {
+	Dispatch,
+	FC,
+	SetStateAction,
+	useEffect,
+	useRef,
+	useState,
+} from 'react';
 import { Button } from '../ui/button';
 import { HoverEffect } from '../ui/card-hover-effect';
 import nacl from 'tweetnacl';
 import { mnemonicToSeedSync } from 'bip39';
 import { derivePath } from 'ed25519-hd-key';
 import { Keypair } from '@solana/web3.js';
-import { ethers } from 'ethers'; // Import ethers.js for Ethereum keypair generation
-import CoinKey from 'coinkey'; // Import coinkey for Bitcoin keypair generation
+import CoinKey from 'coinkey';
+import bitcoin from 'bitcoinjs-lib';
+import HDKey from 'hdkey';
 import { deriveEthereumWallet } from '@/utils/ethereumValidation';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 import {
-	Modal,
 	ModalBody,
 	ModalContent,
 	ModalFooter,
-	ModalProvider,
-	ModalTrigger,
 	useModal,
 } from '@/components/ui/animated-modal';
 import CreateWalletForm from './CreateWalletForm';
+import AlertBox from '../AlertBox';
 
 interface WalletsSectionProps {
 	mnemonic: string;
@@ -32,73 +36,164 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 	const [index, setIndex] = useState(0);
 	const { setOpen } = useModal();
 	const formRef = useRef<HTMLButtonElement>(null);
+	const [deleteAlert, setDeleteAlert] = useState(false);
+	const [deleteWalletPubkey, setDeleteWalletPubkey] = useState<string | null>(
+		null
+	);
 
 	const triggerWalletBox = () => {
 		setOpen(true);
 	};
-	const handleConfirm = () => {};
+	const triggerDeleteWallet = (publicKey: string) => {
+		setDeleteWalletPubkey(publicKey);
+		setDeleteAlert(true);
+	};
+	const handleDeleteConfirm = () => {
+		if (deleteWalletPubkey) deleteWalletByPublicKey(deleteWalletPubkey);
+
+		setStatus('Wallet Deleted');
+		setDeleteWalletPubkey(null);
+	};
+
 	const handleSubmitClick = () => {
 		if (formRef.current) {
 			formRef.current.click();
-			setOpen(false);
 		}
 	};
 
+	// const deriveWallet = ({
+	// 	mnemonic,
+	// 	coinType = 'solana',
+	// 	walletName = `Wallet ${index + 1}`,
+	// }: {
+	// 	mnemonic: string;
+	// 	coinType: string;
+	// 	walletName: string;
+	// }) => {
+	// 	const seed = mnemonicToSeedSync(mnemonic);
+
+	// 	const paths = {
+	// 		solana: `m/44'/501'/${index}'/0'`,
+	// 		ethereum: `m/44'/60'/0'/0/${index}`,
+	// 		bitcoin: `m/44'/0'/${index}'/0/0`,
+	// 	};
+
+	// 	let publicKey, privateKey;
+
+	// 	if (coinType === 'solana') {
+	// 		const path = paths[coinType];
+	// 		const derivedSeed = derivePath(path, seed.toString('hex')).key;
+	// 		const keypair = nacl.sign.keyPair.fromSeed(derivedSeed);
+	// 		privateKey = Buffer.from(keypair.secretKey).toString('hex');
+	// 		publicKey = Keypair.fromSecretKey(keypair.secretKey).publicKey.toBase58();
+	// 	} else if (coinType === 'ethereum') {
+	// 		const ethereumWallet = deriveEthereumWallet(seed, paths.ethereum);
+	// 		privateKey = ethereumWallet.privateKey;
+	// 		publicKey = ethereumWallet.address;
+	// 	} else if (coinType === 'bitcoin') {
+	// 		const path = paths.bitcoin;
+	// 		const hdKey = HDKey.fromMasterSeed(Buffer.from(seed));
+	// 		const child = hdKey.derive(path);
+	// 		const ck = new CoinKey(child.privateKey, bitcoin.networks.bitcoin);
+	// 		publicKey = ck.publicAddress;
+	// 		privateKey = ck.privateKey.toString('hex');
+	// 	}
+
+	// 	const newWallet = {
+	// 		publicKey,
+	// 		privateKey,
+	// 		coinType,
+	// 		name: walletName,
+	// 	};
+
+	// 	const existingWallets = JSON.parse(localStorage.getItem('wallets') || '[]');
+	// 	const updatedWallets = [...existingWallets, newWallet];
+	// 	localStorage.setItem('wallets', JSON.stringify(updatedWallets));
+
+	// 	setWallets(updatedWallets);
+	// 	setIndex(index + 1);
+	// 	setOpen(false);
+	// };
+
 	const deriveWallet = ({
 		mnemonic,
-		coinType = 'solana', // default to Solana
+		coinType = 'solana',
 		walletName = `Wallet ${index + 1}`,
 	}: {
 		mnemonic: string;
 		coinType: string;
 		walletName: string;
 	}) => {
-		console.log('hello');
 		const seed = mnemonicToSeedSync(mnemonic);
 
-		// Define paths for different coin types
+		let tempIndex = index; // Use a temporary index variable for trial and error
 		const paths = {
-			solana: `m/44'/501'/${index}'/0'`,
-			ethereum: `m/44'/60'/0'/0/${index}`,
-			bitcoin: `m/44'/0'/${index}'/0/0`,
+			solana: `m/44'/501'/${tempIndex}'/0'`,
+			ethereum: `m/44'/60'/0'/0/${tempIndex}`,
+			bitcoin: `m/44'/0'/${tempIndex}'/0/0`,
 		};
 
-		let publicKey, privateKey;
+		// Initialize publicKey and privateKey to avoid the 'used before assigned' error
+		let publicKey: string = '';
+		let privateKey: string = '';
+		let newWallet: any;
+		let existingWallets = JSON.parse(localStorage.getItem('wallets') || '[]');
+		let isDuplicate = true;
 
-		if (coinType === 'solana') {
-			const path = paths[coinType];
-			const derivedSeed = derivePath(path, seed.toString('hex')).key;
-			const keypair = nacl.sign.keyPair.fromSeed(derivedSeed);
-			privateKey = Buffer.from(keypair.secretKey).toString('hex');
-			publicKey = Keypair.fromSecretKey(keypair.secretKey).publicKey.toBase58();
-		} else if (coinType === 'ethereum') {
-			const ethereumWallet = deriveEthereumWallet(seed, paths.ethereum);
-			privateKey = ethereumWallet.privateKey;
-			publicKey = ethereumWallet.address;
-		} else if (coinType === 'bitcoin') {
-			const path = paths.bitcoin;
-			const derivedSeed = derivePath(path, seed.toString('hex')).key;
-			const ck = new CoinKey(derivedSeed, { compressed: true });
-			publicKey = ck.publicAddress;
-			privateKey = ck.privateKey.toString('hex');
+		// Loop until a unique public key is found
+		while (isDuplicate) {
+			if (coinType === 'solana') {
+				const path = paths[coinType];
+				const derivedSeed = derivePath(path, seed.toString('hex')).key;
+				const keypair = nacl.sign.keyPair.fromSeed(derivedSeed);
+				privateKey = Buffer.from(keypair.secretKey).toString('hex');
+				publicKey = Keypair.fromSecretKey(
+					keypair.secretKey
+				).publicKey.toBase58();
+			} else if (coinType === 'ethereum') {
+				const ethereumWallet = deriveEthereumWallet(seed, paths.ethereum);
+				privateKey = ethereumWallet.privateKey;
+				publicKey = ethereumWallet.address;
+			} else if (coinType === 'bitcoin') {
+				const path = paths.bitcoin;
+				const hdKey = HDKey.fromMasterSeed(Buffer.from(seed));
+				const child = hdKey.derive(path);
+				const ck = new CoinKey(child.privateKey, bitcoin.networks);
+				publicKey = ck.publicAddress;
+				privateKey = ck.privateKey.toString('hex');
+			}
+
+			newWallet = {
+				publicKey,
+				privateKey,
+				coinType,
+				name: walletName,
+			};
+
+			// Check if the public key already exists in the wallet list
+			isDuplicate = existingWallets.some(
+				(wallet: Wallet) => wallet.publicKey === publicKey
+			);
+
+			if (isDuplicate) {
+				// Increment the tempIndex if a duplicate is found and update the paths
+				tempIndex++;
+				paths.solana = `m/44'/501'/${tempIndex}'/0'`;
+				paths.ethereum = `m/44'/60'/0'/0/${tempIndex}`;
+				paths.bitcoin = `m/44'/0'/${tempIndex}'/0/0`;
+			}
 		}
 
-		const newWallet = {
-			publicKey,
-			privateKey,
-			coinType,
-			name: walletName,
-		};
-
-		// Store the wallet in local storage
-		const existingWallets = JSON.parse(localStorage.getItem('wallets') || '[]');
+		// Store the new wallet in local storage
 		const updatedWallets = [...existingWallets, newWallet];
 		localStorage.setItem('wallets', JSON.stringify(updatedWallets));
 
 		// Update state
 		setWallets(updatedWallets);
-		setIndex(index + 1);
+		setIndex(tempIndex + 1); // Update the actual index state only after finding a unique wallet
+		setOpen(false);
 	};
+
 	const retrieveWallets = () => {
 		const storedWallets = JSON.parse(localStorage.getItem('wallets') || '[]');
 		setWallets(storedWallets);
@@ -113,6 +208,19 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 		setWallets(updatedWallets);
 		localStorage.setItem('wallets', JSON.stringify(updatedWallets));
 	};
+	const deleteWalletByPublicKey = (publicKey: string) => {
+		const wallets: Wallet[] = JSON.parse(
+			localStorage.getItem('wallets') || '[]'
+		);
+		const updatedWallets = wallets.filter(
+			(wallet) => wallet.publicKey !== publicKey
+		);
+		localStorage.setItem('wallets', JSON.stringify(updatedWallets));
+		retrieveWallets();
+	};
+	useEffect(() => {
+		retrieveWallets();
+	}, []);
 
 	return (
 		<main className='grid grid-cols-7 w-full'>
@@ -130,41 +238,15 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 			<HoverEffect
 				items={wallets}
 				setStatus={setStatus}
+				deleteWallet={(publicKey: string) => triggerDeleteWallet(publicKey)}
 			/>
-			<ModalBody>
-				<ModalContent className='gap-5'>
-					<div className='flex flex-col justify-between'>
-						<h1 className='text-lg lg:text-2xl font-bold'>
+			<ModalBody className=''>
+				<ModalContent className='gap-5 bg-slate-800 '>
+					<div className='flex flex-col justify-between '>
+						<h1 className='text-lg lg:text-2xl font-bold '>
 							Create a new Wallet
 						</h1>
-						{/* <div className='flex my-5 gap-5'>
 
-							<RadioGroup
-								defaultValue='solana'
-								className='flex'>
-								<div className='flex items-center space-x-2'>
-									<RadioGroupItem
-										value='solana'
-										id='solana'
-									/>
-									<Label htmlFor='solana'>Solana</Label>
-								</div>
-								<div className='flex items-center space-x-2'>
-									<RadioGroupItem
-										value='ethereum'
-										id='ethereum'
-									/>
-									<Label htmlFor='ethereum'>Ethereum</Label>
-								</div>
-								<div className='flex items-center space-x-2'>
-									<RadioGroupItem
-										value='bitcoin'
-										id='bitcoin'
-									/>
-									<Label htmlFor='bitcoin'>Bitcoin</Label>
-								</div>
-							</RadioGroup>
-						</div> */}
 						<CreateWalletForm
 							ref={formRef}
 							defaultSecretPhrase={mnemonic}
@@ -175,14 +257,27 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 						/>
 					</div>
 				</ModalContent>
-				<ModalFooter className='gap-4 '>
+				<ModalFooter className='gap-4 grid grid-cols-4 '>
+					<button
+						onClick={() => setOpen(false)}
+						className='px-2 py-1 bg-gray-200 text-black dark:bg-slate-800 dark:border-black dark:text-white border border-gray-300 rounded-md text-sm text-center col-start-3'>
+						Cancel
+					</button>
 					<button
 						onClick={handleSubmitClick}
-						className='px-2 py-1 bg-gray-200 text-black dark:bg-black dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28 text-center'>
+						className='px-3 py-2 bg-gray-200 text-black dark:bg-slate-800 dark:border-black dark:text-white border border-gray-300 rounded-md text-sm  text-center'>
 						Create Wallet
 					</button>
 				</ModalFooter>
 			</ModalBody>
+			<AlertBox
+				open={deleteAlert}
+				setOpen={setDeleteAlert}
+				title='Are you sure you want to delete this wallet?'
+				description='This is a destructive action and you cannot access your wallet back without your secret phrase'
+				onConfirm={handleDeleteConfirm}
+				onCancel={() => setDeleteWalletPubkey(null)}
+			/>
 		</main>
 	);
 };

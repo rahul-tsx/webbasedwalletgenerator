@@ -1,7 +1,6 @@
-
 interface Wallet {
-	name?: string;
+	name: string;
 	publicKey: string;
 	privateKey: string;
-	coinType?: string;
+	coinType: string;
 }

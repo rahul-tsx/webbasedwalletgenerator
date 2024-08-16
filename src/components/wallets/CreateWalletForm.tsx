@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, Controller, UseFormHandleSubmit } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import React, { forwardRef } from 'react';
 
@@ -21,6 +21,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 interface CreateWalletFormProps {
 	index: number;
 	defaultSecretPhrase: string;
+
 	createWallet: ({
 		mnemonic,
 		coinType,
@@ -57,8 +58,8 @@ const CreateWalletForm = forwardRef<HTMLButtonElement, CreateWalletFormProps>(
 			resolver: zodResolver(formSchema),
 			defaultValues: {
 				walletName: '',
-				secretPhrase: defaultSecretPhrase, // Set default value from props
-				coinType: 'solana', // Set a default coin type if needed
+				secretPhrase: defaultSecretPhrase,
+				coinType: 'solana',
 			},
 		});
 
@@ -69,7 +70,6 @@ const CreateWalletForm = forwardRef<HTMLButtonElement, CreateWalletFormProps>(
 				coinType: values.coinType,
 				walletName: values.walletName,
 			});
-			console.log(values);
 		}
 
 		return (
@@ -86,7 +86,9 @@ const CreateWalletForm = forwardRef<HTMLButtonElement, CreateWalletFormProps>(
 								<FormControl>
 									<Input
 										placeholder='Enter wallet name'
+										autoComplete='off'
 										{...field}
+										className='w-full'
 									/>
 								</FormControl>
 								{
@@ -103,10 +105,11 @@ const CreateWalletForm = forwardRef<HTMLButtonElement, CreateWalletFormProps>(
 						name='secretPhrase'
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Secret Phrase</FormLabel>
+								<FormLabel className='text-white'>Secret Phrase</FormLabel>
 								<FormControl>
 									<Input
 										placeholder='Enter secret phrase'
+										autoComplete='off'
 										{...field}
 										className='w-full'
 									/>
@@ -139,11 +142,11 @@ const CreateWalletForm = forwardRef<HTMLButtonElement, CreateWalletFormProps>(
 												<RadioGroupItem value='ethereum' /> Ethereum
 											</FormLabel>
 										</FormItem>
-										<FormItem>
+										{/* <FormItem>
 											<FormLabel>
 												<RadioGroupItem value='bitcoin' /> Bitcoin
 											</FormLabel>
-										</FormItem>
+										</FormItem> */}
 									</RadioGroup>
 								</FormControl>
 								<FormMessage />
@@ -152,7 +155,8 @@ const CreateWalletForm = forwardRef<HTMLButtonElement, CreateWalletFormProps>(
 					/>
 					<Button
 						type='submit'
-						ref={ref}>
+						ref={ref}
+						className='hidden'>
 						Submit
 					</Button>
 				</form>

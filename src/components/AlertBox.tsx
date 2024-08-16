@@ -45,7 +45,7 @@ const AlertBox: FC<AlertBoxProps> = ({
 		<AlertDialog
 			open={open}
 			onOpenChange={setOpen}>
-			<AlertDialogContent>
+			<AlertDialogContent className='bg-slate-800'>
 				<AlertDialogHeader>
 					<AlertDialogTitle className='font-bold'>{title}</AlertDialogTitle>
 					<AlertDialogDescription className='text-red-500 font-semibold'>
@@ -56,6 +56,7 @@ const AlertBox: FC<AlertBoxProps> = ({
 					<AlertDialogCancel asChild>
 						<Button
 							variant='outline'
+							className='bg-white text-black'
 							onClick={handleCancel}>
 							Cancel
 						</Button>

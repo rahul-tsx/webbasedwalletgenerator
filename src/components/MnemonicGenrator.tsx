@@ -69,7 +69,7 @@ const MnemonicGenrator: FC<MnemonicGenratorProps> = ({
 			</div>
 
 			<ModalBody>
-				<ModalContent className='gap-5'>
+				<ModalContent className='gap-5 bg-slate-800'>
 					<div className='flex justify-between'>
 						<h1 className='text-lg lg:text-2xl font-bold'>
 							Your Secret Phrase
@@ -85,7 +85,7 @@ const MnemonicGenrator: FC<MnemonicGenratorProps> = ({
 						{mnemonic.split(' ').map((word, index) => (
 							<li
 								key={index}
-								className='p-2 bg-slate-800 rounded-[6px] px-5'>
+								className='p-2 bg-slate-950 hover:bg-opacity-50 rounded-[6px] px-5'>
 								{index + 1}. {word}
 							</li>
 						))}
@@ -99,7 +99,7 @@ const MnemonicGenrator: FC<MnemonicGenratorProps> = ({
 				<ModalFooter className='gap-4 '>
 					<button
 						onClick={triggerAlertBox}
-						className='px-2 py-1 bg-gray-200 text-black dark:bg-black dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28 text-center'>
+						className='px-2 py-1 bg-gray-200 text-black dark:bg-slate-800 dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28 text-center'>
 						Close
 					</button>
 				</ModalFooter>
