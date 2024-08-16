@@ -61,60 +61,7 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 		}
 	};
 
-	// const deriveWallet = ({
-	// 	mnemonic,
-	// 	coinType = 'solana',
-	// 	walletName = `Wallet ${index + 1}`,
-	// }: {
-	// 	mnemonic: string;
-	// 	coinType: string;
-	// 	walletName: string;
-	// }) => {
-	// 	const seed = mnemonicToSeedSync(mnemonic);
-
-	// 	const paths = {
-	// 		solana: `m/44'/501'/${index}'/0'`,
-	// 		ethereum: `m/44'/60'/0'/0/${index}`,
-	// 		bitcoin: `m/44'/0'/${index}'/0/0`,
-	// 	};
-
-	// 	let publicKey, privateKey;
-
-	// 	if (coinType === 'solana') {
-	// 		const path = paths[coinType];
-	// 		const derivedSeed = derivePath(path, seed.toString('hex')).key;
-	// 		const keypair = nacl.sign.keyPair.fromSeed(derivedSeed);
-	// 		privateKey = Buffer.from(keypair.secretKey).toString('hex');
-	// 		publicKey = Keypair.fromSecretKey(keypair.secretKey).publicKey.toBase58();
-	// 	} else if (coinType === 'ethereum') {
-	// 		const ethereumWallet = deriveEthereumWallet(seed, paths.ethereum);
-	// 		privateKey = ethereumWallet.privateKey;
-	// 		publicKey = ethereumWallet.address;
-	// 	} else if (coinType === 'bitcoin') {
-	// 		const path = paths.bitcoin;
-	// 		const hdKey = HDKey.fromMasterSeed(Buffer.from(seed));
-	// 		const child = hdKey.derive(path);
-	// 		const ck = new CoinKey(child.privateKey, bitcoin.networks.bitcoin);
-	// 		publicKey = ck.publicAddress;
-	// 		privateKey = ck.privateKey.toString('hex');
-	// 	}
-
-	// 	const newWallet = {
-	// 		publicKey,
-	// 		privateKey,
-	// 		coinType,
-	// 		name: walletName,
-	// 	};
-
-	// 	const existingWallets = JSON.parse(localStorage.getItem('wallets') || '[]');
-	// 	const updatedWallets = [...existingWallets, newWallet];
-	// 	localStorage.setItem('wallets', JSON.stringify(updatedWallets));
-
-	// 	setWallets(updatedWallets);
-	// 	setIndex(index + 1);
-	// 	setOpen(false);
-	// };
-
+	
 	const deriveWallet = ({
 		mnemonic,
 		coinType = 'solana',
@@ -234,7 +181,11 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 					Add Wallet
 				</Button>
 			</div>
-
+			{wallets.length === 0 && (
+				<p className='col-span-5 col-start-2 text-xl p-2 border-white border text-center rounded-lg my-20'>
+					No Wallets Available
+				</p>
+			)}
 			<HoverEffect
 				items={wallets}
 				setStatus={setStatus}

@@ -83,11 +83,7 @@ const config = {
 					foreground: 'hsl(var(--card-foreground))',
 				},
 			},
-			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)',
-			},
+			
 			boxShadow: {
 				neon: '0 0 5px #FFFFFF, 0 0 10px #FFFFFF, 0 0 15px #00FFFF, 0 0 20px #00FFFF, 0 0 25px #FFFF00, 0 0 30px #FFFF00',
 			},
