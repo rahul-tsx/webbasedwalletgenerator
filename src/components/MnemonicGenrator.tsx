@@ -24,7 +24,7 @@ import AlertBox from './AlertBox';
 
 interface MnemonicGenratorProps {
 	setMnemonic: Dispatch<SetStateAction<string>>;
-	setStatus: Dispatch<SetStateAction<string | null>>;
+	setStatus: (message: string) => void;
 	mnemonic: string;
 }
 

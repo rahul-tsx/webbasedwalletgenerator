@@ -8,13 +8,7 @@ import {
 } from 'react';
 import { Button } from '../ui/button';
 import { HoverEffect } from '../ui/card-hover-effect';
-import nacl from 'tweetnacl';
 import { mnemonicToSeedSync } from 'bip39';
-import { derivePath } from 'ed25519-hd-key';
-import { Keypair } from '@solana/web3.js';
-import CoinKey from 'coinkey';
-import bitcoin from 'bitcoinjs-lib';
-import HDKey from 'hdkey';
 import { deriveEthereumWallet } from '@/utils/ethereumValidation';
 
 import {
@@ -23,12 +17,15 @@ import {
 	ModalFooter,
 	useModal,
 } from '@/components/ui/animated-modal';
-import CreateWalletForm from './CreateWalletForm';
+import { v4 as uuidv4 } from 'uuid';
 import AlertBox from '../AlertBox';
+import { deriveSolanaWallet } from '@/utils/solanaValidation';
+import WalletList from './WalletList';
+import AddNewWalletModal from './AddNewWalletModal';
 
 interface WalletsSectionProps {
 	mnemonic: string;
-	setStatus: Dispatch<SetStateAction<string | null>>;
+	setStatus: (message: string) => void;
 }
 
 const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
@@ -61,7 +58,6 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 		}
 	};
 
-	
 	const deriveWallet = ({
 		mnemonic,
 		coinType = 'solana',
@@ -73,14 +69,13 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 	}) => {
 		const seed = mnemonicToSeedSync(mnemonic);
 
-		let tempIndex = index; // Use a temporary index variable for trial and error
+		let tempIndex = index;
 		const paths = {
 			solana: `m/44'/501'/${tempIndex}'/0'`,
 			ethereum: `m/44'/60'/0'/0/${tempIndex}`,
 			bitcoin: `m/44'/0'/${tempIndex}'/0/0`,
 		};
 
-		// Initialize publicKey and privateKey to avoid the 'used before assigned' error
 		let publicKey: string = '';
 		let privateKey: string = '';
 		let newWallet: any;
@@ -91,23 +86,20 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 		while (isDuplicate) {
 			if (coinType === 'solana') {
 				const path = paths[coinType];
-				const derivedSeed = derivePath(path, seed.toString('hex')).key;
-				const keypair = nacl.sign.keyPair.fromSeed(derivedSeed);
-				privateKey = Buffer.from(keypair.secretKey).toString('hex');
-				publicKey = Keypair.fromSecretKey(
-					keypair.secretKey
-				).publicKey.toBase58();
+				const solwallet = deriveSolanaWallet(path, seed);
+				privateKey = solwallet.privateKey;
+				publicKey = solwallet.publicKey;
 			} else if (coinType === 'ethereum') {
 				const ethereumWallet = deriveEthereumWallet(seed, paths.ethereum);
 				privateKey = ethereumWallet.privateKey;
 				publicKey = ethereumWallet.address;
 			} else if (coinType === 'bitcoin') {
-				const path = paths.bitcoin;
-				const hdKey = HDKey.fromMasterSeed(Buffer.from(seed));
-				const child = hdKey.derive(path);
-				const ck = new CoinKey(child.privateKey, bitcoin.networks);
-				publicKey = ck.publicAddress;
-				privateKey = ck.privateKey.toString('hex');
+				// const path = paths.bitcoin;
+				// const hdKey = HDKey.fromMasterSeed(Buffer.from(seed));
+				// const child = hdKey.derive(path);
+				// const ck = new CoinKey(child.privateKey, bitcoin.networks);
+				// publicKey = ck.publicAddress;
+				// privateKey = ck.privateKey.toString('hex');
 			}
 
 			newWallet = {
@@ -115,15 +107,20 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 				privateKey,
 				coinType,
 				name: walletName,
+				id: uuidv4(),
+				pathIndex: tempIndex,
+				slug: walletName
+					.replace(' ', '_')
+					.concat('_')
+					.concat(coinType)
+					.toLowerCase(),
 			};
 
-			// Check if the public key already exists in the wallet list
 			isDuplicate = existingWallets.some(
 				(wallet: Wallet) => wallet.publicKey === publicKey
 			);
 
 			if (isDuplicate) {
-				// Increment the tempIndex if a duplicate is found and update the paths
 				tempIndex++;
 				paths.solana = `m/44'/501'/${tempIndex}'/0'`;
 				paths.ethereum = `m/44'/60'/0'/0/${tempIndex}`;
@@ -137,17 +134,15 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 
 		// Update state
 		setWallets(updatedWallets);
-		setIndex(tempIndex + 1); // Update the actual index state only after finding a unique wallet
+		setIndex(tempIndex + 1);
 		setOpen(false);
 	};
 
 	const retrieveWallets = () => {
 		const storedWallets = JSON.parse(localStorage.getItem('wallets') || '[]');
 		setWallets(storedWallets);
-		setIndex(storedWallets.length);
 	};
 
-	// Function to rename a wallet
 	const renameWallet = (index: number, newName: string) => {
 		const updatedWallets = wallets.map((wallet, idx) =>
 			idx === index ? { ...wallet, name: newName } : wallet
@@ -181,46 +176,19 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 					Add Wallet
 				</Button>
 			</div>
-			{wallets.length === 0 && (
-				<p className='col-span-5 col-start-2 text-xl p-2 border-white border text-center rounded-lg my-20'>
-					No Wallets Available
-				</p>
-			)}
-			<HoverEffect
-				items={wallets}
+			<WalletList
 				setStatus={setStatus}
-				deleteWallet={(publicKey: string) => triggerDeleteWallet(publicKey)}
+				triggerDeleteWallet={triggerDeleteWallet}
+				wallets={wallets}
+			/>{' '}
+			<AddNewWalletModal
+				deriveWallet={deriveWallet}
+				formRef={formRef}
+				handleSubmitClick={handleSubmitClick}
+				index={index}
+				mnemonic={mnemonic}
+				setOpen={setOpen}
 			/>
-			<ModalBody className=''>
-				<ModalContent className='gap-5 bg-slate-800 '>
-					<div className='flex flex-col justify-between '>
-						<h1 className='text-lg lg:text-2xl font-bold '>
-							Create a new Wallet
-						</h1>
-
-						<CreateWalletForm
-							ref={formRef}
-							defaultSecretPhrase={mnemonic}
-							index={index + 1}
-							createWallet={({ mnemonic, coinType, walletName }) =>
-								deriveWallet({ mnemonic, coinType, walletName })
-							}
-						/>
-					</div>
-				</ModalContent>
-				<ModalFooter className='gap-4 grid grid-cols-4 '>
-					<button
-						onClick={() => setOpen(false)}
-						className='px-2 py-1 bg-gray-200 text-black dark:bg-slate-800 dark:border-black dark:text-white border border-gray-300 rounded-md text-sm text-center col-start-3'>
-						Cancel
-					</button>
-					<button
-						onClick={handleSubmitClick}
-						className='px-3 py-2 bg-gray-200 text-black dark:bg-slate-800 dark:border-black dark:text-white border border-gray-300 rounded-md text-sm  text-center'>
-						Create Wallet
-					</button>
-				</ModalFooter>
-			</ModalBody>
 			<AlertBox
 				open={deleteAlert}
 				setOpen={setDeleteAlert}
