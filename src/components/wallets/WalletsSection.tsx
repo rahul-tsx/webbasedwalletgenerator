@@ -7,16 +7,10 @@ import {
 	useState,
 } from 'react';
 import { Button } from '../ui/button';
-import { HoverEffect } from '../ui/card-hover-effect';
 import { mnemonicToSeedSync } from 'bip39';
 import { deriveEthereumWallet } from '@/utils/ethereumValidation';
 
-import {
-	ModalBody,
-	ModalContent,
-	ModalFooter,
-	useModal,
-} from '@/components/ui/animated-modal';
+import { useModal } from '@/components/ui/animated-modal';
 import { v4 as uuidv4 } from 'uuid';
 import AlertBox from '../AlertBox';
 import { deriveSolanaWallet } from '@/utils/solanaValidation';
@@ -25,13 +19,13 @@ import AddNewWalletModal from './AddNewWalletModal';
 
 interface WalletsSectionProps {
 	mnemonic: string;
-	setStatus: (message: string) => void;
+	setStatus: (message: string, variant?: variantTypes) => void;
 }
 
 const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 	const [wallets, setWallets] = useState<Wallet[]>([]);
 	const [index, setIndex] = useState(0);
-	const { setOpen } = useModal();
+	const { closeModal, isOpen, openModal } = useModal('AddWalletModal');
 	const formRef = useRef<HTMLButtonElement>(null);
 	const [deleteAlert, setDeleteAlert] = useState(false);
 	const [deleteWalletPubkey, setDeleteWalletPubkey] = useState<string | null>(
@@ -39,7 +33,7 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 	);
 
 	const triggerWalletBox = () => {
-		setOpen(true);
+		openModal();
 	};
 	const triggerDeleteWallet = (publicKey: string) => {
 		setDeleteWalletPubkey(publicKey);
@@ -48,7 +42,7 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 	const handleDeleteConfirm = () => {
 		if (deleteWalletPubkey) deleteWalletByPublicKey(deleteWalletPubkey);
 
-		setStatus('Wallet Deleted');
+		setStatus('Wallet Deleted', 'warning');
 		setDeleteWalletPubkey(null);
 	};
 
@@ -128,14 +122,12 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 			}
 		}
 
-		// Store the new wallet in local storage
 		const updatedWallets = [...existingWallets, newWallet];
 		localStorage.setItem('wallets', JSON.stringify(updatedWallets));
 
-		// Update state
 		setWallets(updatedWallets);
 		setIndex(tempIndex + 1);
-		setOpen(false);
+		closeModal();
 	};
 
 	const retrieveWallets = () => {
@@ -182,12 +174,13 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 				wallets={wallets}
 			/>{' '}
 			<AddNewWalletModal
+				id='AddWalletModal'
 				deriveWallet={deriveWallet}
 				formRef={formRef}
 				handleSubmitClick={handleSubmitClick}
 				index={index}
 				mnemonic={mnemonic}
-				setOpen={setOpen}
+				closeModal={closeModal}
 			/>
 			<AlertBox
 				open={deleteAlert}

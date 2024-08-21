@@ -4,6 +4,7 @@ import CreateWalletForm from './CreateWalletForm';
 
 interface AddNewWalletModalProps {
 	formRef: RefObject<HTMLButtonElement>;
+	id: string;
 	index: number;
 	mnemonic: string;
 	deriveWallet: ({
@@ -15,20 +16,23 @@ interface AddNewWalletModalProps {
 		coinType: string;
 		walletName: string;
 	}) => void;
-	setOpen: (open: boolean) => void;
+	closeModal: () => void;
 	handleSubmitClick: () => void;
 }
 
 const AddNewWalletModal: FC<AddNewWalletModalProps> = ({
+	id,
 	deriveWallet,
 	formRef,
 	handleSubmitClick,
 	index,
 	mnemonic,
-	setOpen,
+	closeModal,
 }) => {
 	return (
-		<ModalBody className=''>
+		<ModalBody
+			className=''
+			modalId={id}>
 			<ModalContent className='gap-5 bg-slate-800 '>
 				<div className='flex flex-col justify-between '>
 					<h1 className='text-lg lg:text-2xl font-bold '>
@@ -45,7 +49,7 @@ const AddNewWalletModal: FC<AddNewWalletModalProps> = ({
 			</ModalContent>
 			<ModalFooter className='gap-4 grid grid-cols-4 '>
 				<button
-					onClick={() => setOpen(false)}
+					onClick={() => closeModal()}
 					className='px-2 py-1 bg-gray-200 text-black dark:bg-slate-800 dark:border-black dark:text-white border border-gray-300 rounded-md text-sm text-center col-start-3'>
 					Cancel
 				</button>

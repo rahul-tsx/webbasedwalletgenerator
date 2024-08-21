@@ -7,12 +7,14 @@ import { useSearchParams } from 'next/navigation';
 import { FC, useEffect, useState } from 'react';
 import WalletTransaction from '@/components/walletdetail/WalletTransaction';
 import WalletAction from '@/components/walletdetail/WalletAction';
+import { Modal } from '@/components/ui/animated-modal';
 
 interface pageProps {}
 
 const WalletDetailsPage: FC<pageProps> = ({}) => {
 	const params = useSearchParams();
 	const [wallet, setWallet] = useState<Wallet | null>(null);
+	const [tokenBalance, setTokenBalance] = useState<number>(0);
 	const [mounted, setMounted] = useState(false);
 	const retrieveWalletById = (id: string) => {
 		const wallets: Wallet[] = JSON.parse(
@@ -55,8 +57,18 @@ const WalletDetailsPage: FC<pageProps> = ({}) => {
 				<div className='text-[40px]'>{wallet?.name}</div>
 			</div>
 
-			<WalletInfo wallet={wallet!} />
-			<WalletAction />
+			<WalletInfo
+				wallet={wallet!}
+				setTokenBalance={setTokenBalance}
+				tokenBalance={tokenBalance}
+			/>
+			<Modal>
+				<WalletAction
+					wallet={wallet!}
+					tokenBalance={tokenBalance}
+				/>
+			</Modal>
+
 			<WalletTransaction />
 		</div>
 	);

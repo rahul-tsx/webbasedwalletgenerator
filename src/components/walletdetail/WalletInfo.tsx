@@ -1,43 +1,49 @@
 import StatusContext from '@/context/statusContext';
 import { getEthBalance } from '@/utils/ethereumValidation';
 import { getSolBalance } from '@/utils/solanaValidation';
-import { FC, useContext, useEffect, useState } from 'react';
+import {
+	Dispatch,
+	FC,
+	SetStateAction,
+	useContext,
+	useEffect,
+	useState,
+} from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
+import { BiRefresh } from 'react-icons/bi';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import RefreshButton from '../ui/refresh-button';
 
 interface WalletInfoProps {
 	wallet: Wallet;
+	tokenBalance: number;
+	setTokenBalance: Dispatch<SetStateAction<number>>;
 }
 
-const WalletInfo: FC<WalletInfoProps> = ({ wallet }) => {
+const WalletInfo: FC<WalletInfoProps> = ({
+	wallet,
+	setTokenBalance,
+	tokenBalance,
+}) => {
 	const [visibleBalance, setVisibleBalance] = useState(false);
 	const [visiblePkey, setVisiblePkey] = useState(false);
 	const [visibleTokenBalance, setVisibleTokenBalance] = useState(false);
-	const [tokenBalance, setTokenBalance] = useState<number>(0);
+
+	const fetchBalance = async () => {
+		console.log('fetched');
+		let balance;
+		if (wallet.coinType === 'solana') {
+			balance = await getSolBalance(wallet.publicKey);
+		}
+		if (wallet.coinType === 'ethereum') {
+			balance = await getEthBalance(wallet.publicKey);
+		}
+		setTokenBalance(balance || 0);
+	};
 
 	useEffect(() => {
-		const fetchBalance = async () => {
-			let balance;
-			if (wallet.coinType === 'solana') {
-				balance = await getSolBalance(wallet.publicKey);
-			}
-			if (wallet.coinType === 'ethereum') {
-				balance = await getEthBalance(wallet.publicKey);
-			}
-			setTokenBalance(balance || 0);
-		};
-
 		fetchBalance();
-	}, [wallet.publicKey]);
-
-	// useEffect(() => {
-	// 	const fetchBalance = async () => {
-	// 		const balance = await getSolBalance(wallet.publicKey);
-	// 		setTokenBalance(balance || 0);
-	// 	};
-
-	// 	fetchBalance();
-	// }, [wallet.publicKey]);
+	}, [wallet]);
 
 	const toggleVisibleBalance = () => {
 		setVisibleBalance((prev) => !prev);
@@ -49,7 +55,7 @@ const WalletInfo: FC<WalletInfoProps> = ({ wallet }) => {
 				path = `m/44'/501'/${index}'/0'`;
 				break;
 			case 'ethereum':
-				path = `m/44'/501'/${index}'/0'`;
+				path = `m/44'/60'/0'/0/${index}`;
 				break;
 			default:
 				break;
@@ -124,6 +130,13 @@ const WalletInfo: FC<WalletInfoProps> = ({ wallet }) => {
 					</p>
 				</div>
 			</div>
+			<div className='col-span-2 -col-start-3 my-5'>
+				<RefreshButton
+					onClick={fetchBalance}
+					text='Refresh Balance'
+					duration={5000}
+				/>
+			</div>
 
 			<div className='grid grid-cols-6 col-span-8  w-full space-x-5 items-center'>
 				<label className='text-xl font-bold text-white col-span-1'>
@@ -134,7 +147,9 @@ const WalletInfo: FC<WalletInfoProps> = ({ wallet }) => {
 					<div className='col-span-4'>
 						<CopyToClipboard
 							text={wallet.publicKey}
-							onCopy={() => changeStatus('Public Key Copied to Clipboard!')}>
+							onCopy={() =>
+								changeStatus('Public Key Copied to Clipboard!', 'success')
+							}>
 							<span className='key-wrap hover:underline tracking-wide cursor-pointer'>
 								{wallet.publicKey}
 							</span>
@@ -152,7 +167,9 @@ const WalletInfo: FC<WalletInfoProps> = ({ wallet }) => {
 					<div className='col-span-4 flex items-center'>
 						<CopyToClipboard
 							text={wallet.publicKey}
-							onCopy={() => changeStatus('Private Key Copied to Clipboard!')}>
+							onCopy={() =>
+								changeStatus('Private Key Copied to Clipboard!', 'success')
+							}>
 							<p className='key-wrap hover:underline tracking-wide cursor-pointer'>
 								{visiblePkey ? wallet.privateKey : '*'.repeat(50)}
 							</p>
@@ -175,7 +192,7 @@ const WalletInfo: FC<WalletInfoProps> = ({ wallet }) => {
 						<CopyToClipboard
 							text={wallet.publicKey}
 							onCopy={() =>
-								changeStatus('Derivation Path Copied to Clipboard!')
+								changeStatus('Derivation Path Copied to Clipboard!', 'success')
 							}>
 							<p className='key-wrap hover:underline tracking-wide cursor-pointer'>
 								{derivePath(wallet.coinType, wallet.pathIndex)}

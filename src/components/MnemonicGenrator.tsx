@@ -24,7 +24,7 @@ import AlertBox from './AlertBox';
 
 interface MnemonicGenratorProps {
 	setMnemonic: Dispatch<SetStateAction<string>>;
-	setStatus: (message: string) => void;
+	setStatus: (message: string, variant?: variantTypes) => void;
 	mnemonic: string;
 }
 
@@ -33,20 +33,20 @@ const MnemonicGenrator: FC<MnemonicGenratorProps> = ({
 	setStatus,
 	mnemonic,
 }) => {
-	const { setOpen } = useModal();
+	const { isOpen,closeModal,openModal } = useModal("mneumonicModal")
 	const [alertOpen, setAlertOpen] = useState(false);
 
 	const triggerAlertBox = () => {
 		setAlertOpen(true);
 	};
 	const handleConfirm = () => {
-		setOpen(false);
+		closeModal();
 	};
 
 	const handleGenerateMnemonic = () => {
 		const secretPhrase = generateMnemonic();
 		setMnemonic(secretPhrase);
-		setOpen(true);
+		openModal();
 	};
 
 	return (
@@ -68,7 +68,7 @@ const MnemonicGenrator: FC<MnemonicGenratorProps> = ({
 				</button>
 			</div>
 
-			<ModalBody>
+			<ModalBody modalId='mneumonicModal'>
 				<ModalContent className='gap-5 bg-slate-800'>
 					<div className='flex justify-between'>
 						<h1 className='text-lg lg:text-2xl font-bold'>
@@ -76,7 +76,7 @@ const MnemonicGenrator: FC<MnemonicGenratorProps> = ({
 						</h1>
 						<CopyToClipboard
 							text={mnemonic}
-							onCopy={() => setStatus('Secret Phrase copied to clipboard!')}>
+							onCopy={() => setStatus('Secret Phrase copied to clipboard!','success')}>
 							<BiCopy className='ml-2 cursor-pointer size-10' />
 						</CopyToClipboard>
 					</div>

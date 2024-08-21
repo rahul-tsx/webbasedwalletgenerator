@@ -3,7 +3,7 @@ import { HoverEffect } from '../ui/card-hover-effect';
 
 interface WalletListProps {
 	wallets: Wallet[];
-	setStatus: (message: string) => void;
+	setStatus: (message: string, variant?: variantTypes) => void;
 	triggerDeleteWallet: (publicKey: string) => void;
 }
 

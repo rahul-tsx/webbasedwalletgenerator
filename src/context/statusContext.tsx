@@ -1,8 +1,8 @@
 import { createContext } from 'react';
 
 interface StatusContextType {
-	status: string | null;
-	changeStatus: (message: string) => void;
+	status: statusObj | null;
+	changeStatus: (message: string, variant?: variantTypes) => void;
 }
 
 const StatusContext = createContext<StatusContextType | undefined>(undefined);

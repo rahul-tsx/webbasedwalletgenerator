@@ -15,7 +15,7 @@ export const HoverEffect = ({
 }: {
 	items: Wallet[];
 	className?: string;
-	setStatus: (message: string) => void;
+	setStatus: (message: string, variant?: variantTypes) => void;
 	deleteWallet: (publicKey: string) => void;
 }) => {
 	const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -86,7 +86,7 @@ export const HoverEffect = ({
 										<CopyToClipboard
 											text={item.publicKey}
 											onCopy={() =>
-												setStatus('Public Key Copied to Clipboard!')
+												setStatus('Public Key Copied to Clipboard!', 'success')
 											}>
 											<BiCopy className='cursor-pointer size-6' />
 										</CopyToClipboard>
@@ -107,7 +107,7 @@ export const HoverEffect = ({
 										<CopyToClipboard
 											text={item.privateKey}
 											onCopy={() =>
-												setStatus('Private Key Copied to Clipboard!')
+												setStatus('Private Key Copied to Clipboard!', 'success')
 											}>
 											<BiCopy className='cursor-pointer size-6' />
 										</CopyToClipboard>

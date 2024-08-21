@@ -9,18 +9,65 @@ interface ProviderProps {
 }
 
 const Provider: FC<ProviderProps> = ({ children }) => {
-	const [status, setStatus] = useState<string | null>(null);
-	const changeStatus = (message: string) => {
-		setStatus(message);
+	const [status, setStatus] = useState<statusObj | null>(null);
+	const changeStatus = (message: string, variant: variantTypes = 'default') => {
+		setStatus({ msg: message, variant });
 	};
 	useEffect(() => {
 		if (status) {
-			toast(status, {
-				action: {
-					label: <CgClose size={10} />,
-					onClick: () => {},
-				},
-			});
+			switch (status.variant) {
+				case 'success':
+					toast.success(status.msg, {
+						action: {
+							label: <CgClose size={10} />,
+							onClick: () => {},
+						},
+
+						style: {
+							backgroundColor: 'black',
+							color: '#4caf50',
+						},
+					});
+					break;
+
+				case 'error':
+					toast.error(status.msg, {
+						action: {
+							label: <CgClose size={10} />,
+							onClick: () => {},
+						},
+						style: {
+							backgroundColor: 'black',
+							color: '#f44336',
+						},
+					});
+					break;
+				case 'warning':
+					toast.error(status.msg, {
+						action: {
+							label: <CgClose size={10} />,
+							onClick: () => {},
+						},
+						style: {
+							backgroundColor: 'black',
+							color: 'orange',
+						},
+					});
+					break;
+
+				default:
+					toast(status.msg, {
+						action: {
+							label: <CgClose size={10} />,
+							onClick: () => {},
+						},
+						style: {
+							backgroundColor: 'black',
+							color: 'white',
+						},
+					});
+					break;
+			}
 
 			const timeout = setTimeout(() => {
 				setStatus(null);
