@@ -42,10 +42,10 @@ export const getSolBalance = async (pubKey: string) => {
 export const solDrop = async (pubKey: string) => {
 	try {
 		const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
-		console.log(`-- Airdropping 0.1 SOL --`);
+		console.log(`-- Airdropping 2 SOL --`);
 		const signature = await connection.requestAirdrop(
 			new PublicKey(pubKey),
-			0.1 * LAMPORTS_PER_SOL
+			2 * LAMPORTS_PER_SOL
 		);
 		const latestBlockHash = await connection.getLatestBlockhash();
 
@@ -60,3 +60,74 @@ export const solDrop = async (pubKey: string) => {
 	}
 };
 
+export const sendSol = async (
+	privKey: string,
+	receiverPublicKey: string,
+	solAmount: number
+) => {
+	try {
+		const connection = new Connection(clusterApiUrl('devnet'));
+		const privateKey = bs58.decode(privKey);
+		const receiverPubKey = new PublicKey(receiverPublicKey);
+		const senderAddress = Keypair.fromSecretKey(privateKey);
+		const transaction = new Transaction().add(
+			SystemProgram.transfer({
+				fromPubkey: senderAddress.publicKey,
+				toPubkey: receiverPubKey,
+				lamports: solAmount * LAMPORTS_PER_SOL,
+			})
+		);
+		const signature = await sendAndConfirmTransaction(connection, transaction, [
+			senderAddress,
+		]);
+
+	
+		return signature;
+	} catch (error) {
+		console.log(error);
+		throw error;
+	}
+};
+
+export const checkNetworkFees = async (
+	payerPubKey: string,
+	receiverPubKey: string
+) => {
+	const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+
+	const type = SYSTEM_INSTRUCTION_LAYOUTS.Transfer;
+
+	const data = Buffer.alloc(type.layout.span);
+	const layoutFields = Object.assign({ instruction: type.index });
+	type.layout.encode(layoutFields, data);
+
+	const recentBlockhash = await connection.getLatestBlockhash();
+
+	const messageParams = {
+		accountKeys: [
+			payerPubKey,
+			receiverPubKey,
+			SystemProgram.programId.toString(),
+		],
+		header: {
+			numReadonlySignedAccounts: 0,
+			numReadonlyUnsignedAccounts: 1,
+			numRequiredSignatures: 1,
+		},
+		instructions: [
+			{
+				accounts: [0, 1],
+				data: bs58.encode(data),
+				programIdIndex: 2,
+			},
+		],
+		recentBlockhash: recentBlockhash.blockhash,
+	};
+
+	const message = new Message(messageParams);
+
+	const fees = await connection.getFeeForMessage(message);
+	console.log(`Estimated SOL transfer cost: ${fees.value} lamports`);
+	return fees.value;
+	
+};

@@ -2,17 +2,10 @@ import StatusContext from '@/context/statusContext';
 import { FC, useContext, useRef, useState } from 'react';
 import AirdropSection from './AirdropSection';
 import { IoIosSend } from 'react-icons/io';
-import {
-	ModalBody,
-	ModalContent,
-	ModalFooter,
-	useModal,
-} from '../ui/animated-modal';
-import SendTokenForm from './SendTokenForm';
-import { coinUnit } from '@/constants/coinUnit';
-import AddReceiverForm from './AddReceiverForm';
+import { useModal } from '../ui/animated-modal';
 import AddReceiverModal from './AddReceiverModal';
 import SendTokenModal from './SendTokenModal';
+import { sendSol } from '@/utils/solanaValidation';
 
 interface WalletActionProps {
 	wallet: Wallet;
@@ -22,6 +15,8 @@ interface WalletActionProps {
 const WalletAction: FC<WalletActionProps> = ({ wallet, tokenBalance }) => {
 	const context = useContext(StatusContext);
 	const [receiverPubKey, setReceiverPubKey] = useState<string | null>(null);
+	const [amountToSend, setAmountToSend] = useState<number>(0);
+	const [loading, setLoading] = useState(false);
 	const {
 		isOpen: isOpen1,
 		closeModal: closeModal1,
@@ -51,6 +46,26 @@ const WalletAction: FC<WalletActionProps> = ({ wallet, tokenBalance }) => {
 			modal2Ref.current.click();
 		}
 	};
+	const sendToken = async (amount: number) => {
+		setLoading(true);
+		if (wallet.coinType === 'solana') {
+			try {
+				const signature = await sendSol(
+					wallet.privateKey,
+					receiverPubKey!,
+					amount
+				);
+
+				changeStatus(`Transaction Successful: ${signature}`, 'success');
+			} catch (error) {
+				console.log(error);
+				changeStatus(`Transaction Failed`, 'error');
+			} finally {
+				setLoading(false);
+				closeModal2();
+			}
+		}
+	};
 	return (
 		<div className='grid grid-cols-8'>
 			<AirdropSection
@@ -66,31 +81,6 @@ const WalletAction: FC<WalletActionProps> = ({ wallet, tokenBalance }) => {
 					className='group-hover:scale-125 transition-all'
 				/>
 			</button>
-			{/* <ModalBody modalId='sendTokenModal2'>
-				<ModalContent className='gap-5 bg-slate-800'>
-					<div className='flex justify-between'>
-						<h1 className='text-lg lg:text-2xl font-bold capitalize'>
-							Send {coinUnit[wallet.coinType]}
-						</h1>
-					</div>
-					<SendTokenForm
-						maxAmount={tokenBalance}
-						coinType={wallet.coinType}
-					/>
-				</ModalContent>
-				<ModalFooter className='gap-4 '>
-					<button
-						onClick={() => closeModal2()}
-						className='px-2 py-1 bg-gray-200 text-black dark:bg-slate-800 dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28 text-center'>
-						Deny
-					</button>
-					<button
-						onClick={() => closeModal2()}
-						className='px-2 py-1 bg-gray-200 text-black dark:bg-slate-800 dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28 text-center'>
-						Approve
-					</button>
-				</ModalFooter>
-			</ModalBody> */}
 			<SendTokenModal
 				modalId={'sendTokenModal2'}
 				handleNextClick={handleModal2Click}
@@ -99,8 +89,9 @@ const WalletAction: FC<WalletActionProps> = ({ wallet, tokenBalance }) => {
 				onCancel={closeModal2}
 				maxAmount={tokenBalance}
 				wallet={wallet}
-				
-
+				setAmountToSend={setAmountToSend}
+				sendToken={sendToken}
+				loading={loading}
 			/>
 			<AddReceiverModal
 				modalId={'selectReceiverModal1'}

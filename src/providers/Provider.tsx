@@ -10,7 +10,11 @@ interface ProviderProps {
 
 const Provider: FC<ProviderProps> = ({ children }) => {
 	const [status, setStatus] = useState<statusObj | null>(null);
-	const changeStatus = (message: string, variant: variantTypes = 'default') => {
+	const changeStatus = (
+		message: string,
+		variant: variantTypes = 'default',
+		isCopy: boolean = false
+	) => {
 		setStatus({ msg: message, variant });
 	};
 	useEffect(() => {
@@ -18,7 +22,7 @@ const Provider: FC<ProviderProps> = ({ children }) => {
 			switch (status.variant) {
 				case 'success':
 					toast.success(status.msg, {
-						action: {
+						cancel: {
 							label: <CgClose size={10} />,
 							onClick: () => {},
 						},
@@ -32,7 +36,7 @@ const Provider: FC<ProviderProps> = ({ children }) => {
 
 				case 'error':
 					toast.error(status.msg, {
-						action: {
+						cancel: {
 							label: <CgClose size={10} />,
 							onClick: () => {},
 						},
@@ -44,7 +48,7 @@ const Provider: FC<ProviderProps> = ({ children }) => {
 					break;
 				case 'warning':
 					toast.error(status.msg, {
-						action: {
+						cancel: {
 							label: <CgClose size={10} />,
 							onClick: () => {},
 						},
@@ -57,7 +61,7 @@ const Provider: FC<ProviderProps> = ({ children }) => {
 
 				default:
 					toast(status.msg, {
-						action: {
+						cancel: {
 							label: <CgClose size={10} />,
 							onClick: () => {},
 						},
