@@ -1,8 +1,9 @@
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 import { Dispatch, SetStateAction, useState } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
-import { BiCopy } from 'react-icons/bi';
+import { BiCopy, BiLink } from 'react-icons/bi';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FaTrash } from 'react-icons/fa';
 
@@ -14,7 +15,7 @@ export const HoverEffect = ({
 }: {
 	items: Wallet[];
 	className?: string;
-	setStatus: Dispatch<SetStateAction<string | null>>;
+	setStatus: (message: string, variant?: variantTypes) => void;
 	deleteWallet: (publicKey: string) => void;
 }) => {
 	const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -53,9 +54,19 @@ export const HoverEffect = ({
 					</AnimatePresence>
 					<Card>
 						<CardTitle className='flex justify-between items-center'>
-							<p className='text-2xl'>
-								Wallet {idx + 1}: {item.name}
-							</p>
+							<div className='flex space-x-5 items-center'>
+								<p className='text-2xl'>
+									Wallet {idx + 1}: {item.name}
+								</p>
+								<Link
+									href={{
+										pathname: `/wallet/${item.slug}`,
+										query: { id: item.id, pathIndex: item.pathIndex },
+									}}>
+									<BiLink size={20} />
+								</Link>
+							</div>
+
 							<button
 								className='p-2 hover:bg-slate-900 hover:bg-opacity-80 rounded-[6px]'
 								onClick={() => deleteWallet(item.publicKey)}>
@@ -75,7 +86,7 @@ export const HoverEffect = ({
 										<CopyToClipboard
 											text={item.publicKey}
 											onCopy={() =>
-												setStatus('Public Key Copied to Clipboard!')
+												setStatus('Public Key Copied to Clipboard!', 'success')
 											}>
 											<BiCopy className='cursor-pointer size-6' />
 										</CopyToClipboard>
@@ -96,7 +107,7 @@ export const HoverEffect = ({
 										<CopyToClipboard
 											text={item.privateKey}
 											onCopy={() =>
-												setStatus('Private Key Copied to Clipboard!')
+												setStatus('Private Key Copied to Clipboard!', 'success')
 											}>
 											<BiCopy className='cursor-pointer size-6' />
 										</CopyToClipboard>

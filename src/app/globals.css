@@ -104,3 +104,13 @@
 	word-wrap: break-word;
 	overflow-wrap: break-word;
 }
+
+.custom-number-input::-webkit-outer-spin-button,
+.custom-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.custom-number-input {
+  -moz-appearance: textfield;
+}

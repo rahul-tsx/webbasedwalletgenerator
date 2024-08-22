@@ -12,29 +12,47 @@ import React, {
 } from 'react';
 
 interface ModalContextType {
-	open: boolean;
-	setOpen: (open: boolean) => void;
+	modals: { [key: string]: boolean };
+	openModal: (id: string) => void;
+	closeModal: (id: string) => void;
 }
 
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
 
 export const ModalProvider = ({ children }: { children: ReactNode }) => {
-	const [open, setOpen] = useState(false);
+	const [modals, setModals] = useState<{ [key: string]: boolean }>({});
+
+	const openModal = (id: string) => {
+		setModals((prev) => ({ ...prev, [id]: true }));
+	};
+
+	const closeModal = (id: string) => {
+		setModals((prev) => ({ ...prev, [id]: false }));
+	};
 
 	return (
-		<ModalContext.Provider value={{ open, setOpen }}>
+		<ModalContext.Provider value={{ modals, openModal, closeModal }}>
 			{children}
 		</ModalContext.Provider>
 	);
 };
 
-export const useModal = () => {
+export const useModal = (id: string) => {
 	const context = useContext(ModalContext);
 
 	if (!context) {
 		throw new Error('useModal must be used within a ModalProvider');
 	}
-	return context;
+
+	const { modals, openModal, closeModal } = context;
+
+	const isOpen = modals[id] || false;
+
+	return {
+		isOpen,
+		openModal: () => openModal(id),
+		closeModal: () => closeModal(id),
+	};
 };
 
 export function Modal({ children }: { children: ReactNode }) {
@@ -43,9 +61,9 @@ export function Modal({ children }: { children: ReactNode }) {
 
 export const ModalTrigger = forwardRef<
 	HTMLButtonElement,
-	{ children: ReactNode; className?: string }
->(({ children, className }, ref) => {
-	const { setOpen } = useModal();
+	{ children: ReactNode; className?: string; modalId: string }
+>(({ children, className, modalId }, ref) => {
+	const { openModal } = useModal(modalId);
 
 	return (
 		<button
@@ -54,7 +72,7 @@ export const ModalTrigger = forwardRef<
 				'px-4 py-2 rounded-md text-black dark:text-white text-center relative overflow-hidden',
 				className
 			)}
-			onClick={() => setOpen(true)}>
+			onClick={() => openModal()}>
 			{children}
 		</button>
 	);
@@ -64,26 +82,27 @@ ModalTrigger.displayName = 'ModalTrigger';
 export const ModalBody = ({
 	children,
 	className,
+	modalId,
 }: {
 	children: ReactNode;
 	className?: string;
+	modalId: string;
 }) => {
-	const { open } = useModal();
+	const { isOpen, closeModal } = useModal(modalId);
 
 	useEffect(() => {
-		if (open) {
+		if (isOpen) {
 			document.body.style.overflow = 'hidden';
 		} else {
 			document.body.style.overflow = 'auto';
 		}
-	}, [open]);
+	}, [isOpen]);
 
 	const modalRef = useRef(null);
-	const { setOpen } = useModal();
 
 	return (
 		<AnimatePresence>
-			{open && (
+			{isOpen && (
 				<motion.div
 					initial={{
 						opacity: 0,
