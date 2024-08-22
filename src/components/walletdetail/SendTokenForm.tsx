@@ -52,26 +52,27 @@ const SendTokenForm = forwardRef<HTMLButtonElement, SendTokenFormProps>(
 	) => {
 		const [maxSol, setMaxSol] = useState(maxAmount);
 
-		
 		const getFinalTokenBalance = (maxAmount: number, fees: number) => {
 			const totalLamports = maxAmount * LAMPORTS_PER_SOL;
 			const finalLamports = totalLamports - fees;
 			const finalSolBalance = finalLamports / LAMPORTS_PER_SOL;
-			setMaxSol(finalSolBalance > 0 ? finalSolBalance : 0); 
+			setMaxSol(finalSolBalance > 0 ? finalSolBalance : 0);
 		};
 
-		
 		const formSchema = z.object({
 			amount: z
 				.string()
 				.min(1, { message: 'Enter Amount' })
-				.refine((value) => {
-					const parsed = parseFloat(value);
-					return !isNaN(parsed); 
-				}, {
-					message: 'Must be a valid number',
-				})
-				.transform((value) => parseFloat(value)) 
+				.refine(
+					(value) => {
+						const parsed = parseFloat(value);
+						return !isNaN(parsed);
+					},
+					{
+						message: 'Must be a valid number',
+					}
+				)
+				.transform((value) => parseFloat(value))
 				.refine((value) => value > 0, {
 					message: 'Amount must be greater than zero',
 				})
@@ -88,7 +89,6 @@ const SendTokenForm = forwardRef<HTMLButtonElement, SendTokenFormProps>(
 		const { watch, setError, clearErrors } = form;
 		const amount = watch('amount');
 
-	
 		useEffect(() => {
 			const fetchNetworkFees = async () => {
 				const fees = await checkNetworkFees(senderPubKey, receiverPubKey);
@@ -97,7 +97,6 @@ const SendTokenForm = forwardRef<HTMLButtonElement, SendTokenFormProps>(
 			fetchNetworkFees();
 		}, [senderPubKey, receiverPubKey, maxAmount]);
 
-	
 		useEffect(() => {
 			if (amount > maxSol) {
 				setError('amount', {
@@ -155,7 +154,10 @@ const SendTokenForm = forwardRef<HTMLButtonElement, SendTokenFormProps>(
 										}
 										className='size-12 p-2 aspect-square rounded-full  bg-black'
 									/>
-									<span className='text-3xl uppercase'> {`${coinUnit[coinType]}`}</span>
+									<span className='text-3xl uppercase'>
+										{' '}
+										{`${coinUnit[coinType]}`}
+									</span>
 								</FormDescription>
 								<FormDescription className='text-xl text-white text-center py-5'>
 									{`Max: ${maxSol.toFixed(6)} ${coinUnit[coinType]}`}
@@ -176,5 +178,5 @@ const SendTokenForm = forwardRef<HTMLButtonElement, SendTokenFormProps>(
 		);
 	}
 );
-
+SendTokenForm.displayName = 'SendTokenForm';
 export default SendTokenForm;

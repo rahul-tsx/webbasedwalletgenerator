@@ -1,6 +1,8 @@
+import { solPriceUrl } from './../constants/coinUnit';
 import nacl from 'tweetnacl';
 import { derivePath } from 'ed25519-hd-key';
 import bs58 from 'bs58';
+import axios from 'axios';
 import {
 	clusterApiUrl,
 	Connection,
@@ -81,7 +83,6 @@ export const sendSol = async (
 			senderAddress,
 		]);
 
-	
 		return signature;
 	} catch (error) {
 		console.log(error);
@@ -129,5 +130,38 @@ export const checkNetworkFees = async (
 	const fees = await connection.getFeeForMessage(message);
 	console.log(`Estimated SOL transfer cost: ${fees.value} lamports`);
 	return fees.value;
-	
+};
+
+export const getSoltoUsd = async (
+	solBalance: number,
+	previousPrice: number | null=null
+) => {
+	try {
+		const response = await axios.get(solPriceUrl);
+		const data = response.data.data;
+		const currentPrice = parseFloat(data.amount);
+
+		let percentageChange: number | null = null;
+		let priceDifference: number | null = null;
+		if (previousPrice !== null) {
+			priceDifference = currentPrice - previousPrice;
+			percentageChange = (priceDifference / previousPrice) * 100;
+		}
+
+		console.log(`Current Price: $${currentPrice}`);
+		if (percentageChange !== null) {
+			console.log(`Percentage Change: ${percentageChange.toFixed(2)}%`);
+			console.log(`Price Difference: $${priceDifference?.toFixed(2)}`);
+		}
+
+		return {
+			totalValue: solBalance * currentPrice,
+			percentageChange: percentageChange ? percentageChange.toFixed(2) : null,
+			priceDifference: priceDifference ? priceDifference.toFixed(2) : null,
+			currentPrice: currentPrice, 
+		};
+	} catch (error) {
+		console.error('Error fetching SOL to USD price:', error);
+		return null;
+	}
 };

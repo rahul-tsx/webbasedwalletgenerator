@@ -1,6 +1,6 @@
 import StatusContext from '@/context/statusContext';
 import { getEthBalance } from '@/utils/ethereumValidation';
-import { getSolBalance } from '@/utils/solanaValidation';
+import { getSolBalance, getSoltoUsd } from '@/utils/solanaValidation';
 import {
 	Dispatch,
 	FC,
@@ -10,9 +10,9 @@ import {
 	useState,
 } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
-import { BiRefresh } from 'react-icons/bi';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import RefreshButton from '../ui/refresh-button';
+import { coinUnit } from '@/constants/coinUnit';
 
 interface WalletInfoProps {
 	wallet: Wallet;
@@ -20,6 +20,12 @@ interface WalletInfoProps {
 	setTokenBalance: Dispatch<SetStateAction<number>>;
 }
 
+interface dollarChart {
+	totalValue: number | null;
+	percentageChange: string | null;
+	priceDifference: string | null;
+	currentPrice: number | null;
+}
 const WalletInfo: FC<WalletInfoProps> = ({
 	wallet,
 	setTokenBalance,
@@ -28,12 +34,32 @@ const WalletInfo: FC<WalletInfoProps> = ({
 	const [visibleBalance, setVisibleBalance] = useState(false);
 	const [visiblePkey, setVisiblePkey] = useState(false);
 	const [visibleTokenBalance, setVisibleTokenBalance] = useState(false);
+	const [valueBalance, setvalueBalance] = useState<dollarChart>({
+		currentPrice: null,
+		percentageChange: null,
+		priceDifference: null,
+		totalValue: null,
+	});
 
 	const fetchBalance = async () => {
-		console.log('fetched');
 		let balance;
+		let dollar;
 		if (wallet.coinType === 'solana') {
 			balance = await getSolBalance(wallet.publicKey);
+
+			dollar = await getSoltoUsd(
+				balance || 0,
+				valueBalance?.currentPrice || null
+			);
+
+			if (dollar) {
+				setvalueBalance({
+					totalValue: dollar.totalValue,
+					percentageChange: dollar.percentageChange,
+					priceDifference: dollar.priceDifference,
+					currentPrice: dollar.currentPrice,
+				});
+			}
 		}
 		if (wallet.coinType === 'ethereum') {
 			balance = await getEthBalance(wallet.publicKey);
@@ -43,7 +69,7 @@ const WalletInfo: FC<WalletInfoProps> = ({
 
 	useEffect(() => {
 		fetchBalance();
-	}, [wallet]);
+	}, [wallet, tokenBalance]);
 
 	const toggleVisibleBalance = () => {
 		setVisibleBalance((prev) => !prev);
@@ -77,9 +103,12 @@ const WalletInfo: FC<WalletInfoProps> = ({
 				<div className='absolute -top-16 -right-16 w-48 h-48 bg-gray-700 opacity-40 rounded-full'></div>
 
 				<div className='flex flex-col gap-2'>
-					<div className='flex justify-between'>
+					<div className='flex justify-between z-10'>
 						<h2 className='text-white text-5xl font-bold'>
-							$ {visibleBalance ? '393.32' : '***'}
+							${' '}
+							{visibleBalance
+								? valueBalance.totalValue?.toFixed(2) || 0
+								: '***'}
 						</h2>
 						<button
 							onClick={toggleVisibleBalance}
@@ -87,8 +116,34 @@ const WalletInfo: FC<WalletInfoProps> = ({
 							{visibleBalance ? <FaEye size={20} /> : <FaEyeSlash size={20} />}
 						</button>
 					</div>
+					<div className='flex justify-between'>
+						<p className='text-gray-400'>Your balance</p>
+						<div className='font-bold z-10 flex space-x-5'>
+							{valueBalance.percentageChange && (
+								<span
+									className={`${
+										valueBalance.percentageChange &&
+										parseFloat(valueBalance.percentageChange) >= 0
+											? 'text-green-600'
+											: 'text-red-600'
+									}`}>
+									{valueBalance.percentageChange} %
+								</span>
+							)}
 
-					<p className='text-gray-400'>Your balance</p>
+							{valueBalance.priceDifference && (
+								<span
+									className={`${
+										valueBalance.priceDifference &&
+										parseFloat(valueBalance.priceDifference) >= 0
+											? 'text-green-600'
+											: 'text-red-600'
+									}`}>
+									{valueBalance.priceDifference} $
+								</span>
+							)}
+						</div>
+					</div>
 				</div>
 			</div>
 			<div className='col-span-4 max-w-[400px] md:m-0 m-auto w-full h-48 bg-slate-800 rounded-lg relative overflow-hidden p-4'>
@@ -97,16 +152,10 @@ const WalletInfo: FC<WalletInfoProps> = ({
 				<div className='absolute -top-16 -right-16 w-48 h-48 bg-gray-700 opacity-40 rounded-full'></div>
 
 				<div className='flex flex-col gap-2'>
-					<div className='flex justify-between'>
+					<div className='flex justify-between z-10'>
 						<h2 className='text-white text-5xl font-bold'>
 							{visibleTokenBalance ? tokenBalance : '***'}{' '}
-							<span className='text-lg'>
-								{wallet?.coinType === 'solana'
-									? 'Sol'
-									: wallet?.coinType === 'ethereum'
-									? 'ether'
-									: ''}
-							</span>
+							<span className='text-lg'>{coinUnit[wallet.coinType]}</span>
 						</h2>
 						<button
 							onClick={() => setVisibleTokenBalance((prev) => !prev)}

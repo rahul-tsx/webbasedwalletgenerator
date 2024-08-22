@@ -73,7 +73,7 @@ const AddReceiverForm = forwardRef<HTMLButtonElement, AddReceiverFormProps>(
 										className='w-full '
 									/>
 								</FormControl>
-								<FormMessage className='text-red-600 text-[16px] mx-5 font-semibold'/>
+								<FormMessage className='text-red-600 text-[16px] mx-5 font-semibold' />
 							</FormItem>
 						)}
 					/>
@@ -89,5 +89,5 @@ const AddReceiverForm = forwardRef<HTMLButtonElement, AddReceiverFormProps>(
 		);
 	}
 );
-
+AddReceiverForm.displayName = 'AddReceiverForm';
 export default AddReceiverForm;
