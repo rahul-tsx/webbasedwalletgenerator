@@ -1,5 +1,5 @@
 import StatusContext from '@/context/statusContext';
-import { getEthBalance } from '@/utils/ethereumValidation';
+import { getEthBalance, getEthtoUsd } from '@/utils/ethereumValidation';
 import { getSolBalance, getSoltoUsd } from '@/utils/solanaValidation';
 import {
 	Dispatch,
@@ -18,6 +18,7 @@ interface WalletInfoProps {
 	wallet: Wallet;
 	tokenBalance: number;
 	setTokenBalance: Dispatch<SetStateAction<number>>;
+	chainValue: SolanaChain | EthereumChain | null;
 }
 
 interface dollarChart {
@@ -30,6 +31,7 @@ const WalletInfo: FC<WalletInfoProps> = ({
 	wallet,
 	setTokenBalance,
 	tokenBalance,
+	chainValue,
 }) => {
 	const [visibleBalance, setVisibleBalance] = useState(false);
 	const [visiblePkey, setVisiblePkey] = useState(false);
@@ -45,7 +47,14 @@ const WalletInfo: FC<WalletInfoProps> = ({
 		let balance;
 		let dollar;
 		if (wallet.coinType === 'solana') {
-			balance = await getSolBalance(wallet.publicKey);
+			if (chainValue) {
+				balance = await getSolBalance(
+					wallet.publicKey,
+					chainValue as SolanaChain
+				);
+			} else {
+				balance = await getSolBalance(wallet.publicKey);
+			}
 
 			dollar = await getSoltoUsd(
 				balance || 0,
@@ -62,14 +71,34 @@ const WalletInfo: FC<WalletInfoProps> = ({
 			}
 		}
 		if (wallet.coinType === 'ethereum') {
-			balance = await getEthBalance(wallet.publicKey);
+			if (chainValue) {
+				balance = await getEthBalance(
+					wallet.publicKey,
+					chainValue as EthereumChain
+				);
+			} else {
+				balance = await getEthBalance(wallet.publicKey);
+			}
+			dollar = await getEthtoUsd(
+				balance || 0,
+				valueBalance?.currentPrice || null
+			);
+
+			if (dollar) {
+				setvalueBalance({
+					totalValue: dollar.totalValue,
+					percentageChange: dollar.percentageChange,
+					priceDifference: dollar.priceDifference,
+					currentPrice: dollar.currentPrice,
+				});
+			}
 		}
 		setTokenBalance(balance || 0);
 	};
 
 	useEffect(() => {
 		fetchBalance();
-	}, [wallet, tokenBalance]);
+	}, [chainValue]);
 
 	const toggleVisibleBalance = () => {
 		setVisibleBalance((prev) => !prev);
@@ -119,7 +148,7 @@ const WalletInfo: FC<WalletInfoProps> = ({
 					<div className='flex justify-between'>
 						<p className='text-gray-400'>Your balance</p>
 						<div className='font-bold z-10 flex space-x-5'>
-							{valueBalance.percentageChange && (
+							{valueBalance.percentageChange && tokenBalance !== 0 && (
 								<span
 									className={`${
 										valueBalance.percentageChange &&
@@ -131,7 +160,7 @@ const WalletInfo: FC<WalletInfoProps> = ({
 								</span>
 							)}
 
-							{valueBalance.priceDifference && (
+							{valueBalance.priceDifference && tokenBalance !== 0 && (
 								<span
 									className={`${
 										valueBalance.priceDifference &&

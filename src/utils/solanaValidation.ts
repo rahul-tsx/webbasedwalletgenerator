@@ -1,4 +1,4 @@
-import { solPriceUrl } from './../constants/coinUnit';
+import { coinChain, solPriceUrl } from './../constants/coinUnit';
 import nacl from 'tweetnacl';
 import { derivePath } from 'ed25519-hd-key';
 import bs58 from 'bs58';
@@ -30,10 +30,19 @@ export const deriveSolanaWallet = (
 	return { privateKey, publicKey };
 };
 
-export const getSolBalance = async (pubKey: string) => {
+export const getSolBalance = async (
+	pubKey: string,
+	chain: SolanaChain = 'devnet'
+) => {
 	try {
 		const solanaPublicKey = new PublicKey(pubKey);
-		const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+
+		const connection = new Connection(
+			coinChain.solana[chain].link,
+			'confirmed'
+		);
+
+		// console.log(coinChain.solana[chain].link);
 		const walletBalance = await connection.getBalance(solanaPublicKey);
 		return walletBalance / LAMPORTS_PER_SOL;
 	} catch (error) {
@@ -41,9 +50,15 @@ export const getSolBalance = async (pubKey: string) => {
 	}
 };
 
-export const solDrop = async (pubKey: string) => {
+export const solDrop = async (
+	pubKey: string,
+	chain: SolanaChain = 'devnet'
+) => {
 	try {
-		const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+		const connection = new Connection(
+			coinChain.solana[chain].link,
+			'confirmed'
+		);
 		console.log(`-- Airdropping 2 SOL --`);
 		const signature = await connection.requestAirdrop(
 			new PublicKey(pubKey),
@@ -65,10 +80,14 @@ export const solDrop = async (pubKey: string) => {
 export const sendSol = async (
 	privKey: string,
 	receiverPublicKey: string,
-	solAmount: number
+	solAmount: number,
+	chain: SolanaChain = 'devnet'
 ) => {
 	try {
-		const connection = new Connection(clusterApiUrl('devnet'));
+		const connection = new Connection(
+			coinChain.solana[chain].link,
+			'confirmed'
+		);
 		const privateKey = bs58.decode(privKey);
 		const receiverPubKey = new PublicKey(receiverPublicKey);
 		const senderAddress = Keypair.fromSecretKey(privateKey);
@@ -92,9 +111,10 @@ export const sendSol = async (
 
 export const checkNetworkFees = async (
 	payerPubKey: string,
-	receiverPubKey: string
+	receiverPubKey: string,
+	chain: SolanaChain = 'devnet'
 ) => {
-	const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+	const connection = new Connection(coinChain.solana[chain].link, 'confirmed');
 
 	const type = SYSTEM_INSTRUCTION_LAYOUTS.Transfer;
 
@@ -134,7 +154,7 @@ export const checkNetworkFees = async (
 
 export const getSoltoUsd = async (
 	solBalance: number,
-	previousPrice: number | null=null
+	previousPrice: number | null = null
 ) => {
 	try {
 		const response = await axios.get(solPriceUrl);
@@ -148,17 +168,11 @@ export const getSoltoUsd = async (
 			percentageChange = (priceDifference / previousPrice) * 100;
 		}
 
-		console.log(`Current Price: $${currentPrice}`);
-		if (percentageChange !== null) {
-			console.log(`Percentage Change: ${percentageChange.toFixed(2)}%`);
-			console.log(`Price Difference: $${priceDifference?.toFixed(2)}`);
-		}
-
 		return {
 			totalValue: solBalance * currentPrice,
 			percentageChange: percentageChange ? percentageChange.toFixed(2) : null,
 			priceDifference: priceDifference ? priceDifference.toFixed(2) : null,
-			currentPrice: currentPrice, 
+			currentPrice: currentPrice,
 		};
 	} catch (error) {
 		console.error('Error fetching SOL to USD price:', error);

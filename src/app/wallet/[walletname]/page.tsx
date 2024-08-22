@@ -8,6 +8,7 @@ import { FC, useEffect, useState } from 'react';
 import WalletTransaction from '@/components/walletdetail/WalletTransaction';
 import WalletAction from '@/components/walletdetail/WalletAction';
 import { Modal } from '@/components/ui/animated-modal';
+import ChainSelectionDropDown from '@/components/walletdetail/ChainSelectionDropDown';
 
 interface pageProps {}
 
@@ -16,6 +17,9 @@ const WalletDetailsPage: FC<pageProps> = ({}) => {
 	const [wallet, setWallet] = useState<Wallet | null>(null);
 	const [tokenBalance, setTokenBalance] = useState<number>(0);
 	const [mounted, setMounted] = useState(false);
+	const [chainValue, setChainValue] = useState<
+		SolanaChain | EthereumChain | null
+	>(null);
 	const retrieveWalletById = (id: string) => {
 		const wallets: Wallet[] = JSON.parse(
 			localStorage.getItem('wallets') || '[]'
@@ -28,6 +32,7 @@ const WalletDetailsPage: FC<pageProps> = ({}) => {
 			setWallet(retrieveWalletById(id));
 		}
 	}, [params]);
+	
 
 	useEffect(() => {
 		setMounted(true);
@@ -39,33 +44,43 @@ const WalletDetailsPage: FC<pageProps> = ({}) => {
 
 	return (
 		<div className='myContainer flex flex-col gap-10'>
-			<div className='flex items-center space-x-5'>
-				<div className='flex bg-white p-3 rounded-full'>
-					<Image
-						alt='coin logo'
-						src={
-							wallet?.coinType === 'solana'
-								? solIcon
-								: wallet?.coinType === 'ethereum'
-								? ethIcon
-								: ''
-						}
-						className='size-10'
-					/>
+			<div className='flex items-center justify-between '>
+				<div className='flex space-x-5'>
+					<div className='flex bg-white p-3 rounded-full'>
+						<Image
+							alt='coin logo'
+							src={
+								wallet?.coinType === 'solana'
+									? solIcon
+									: wallet?.coinType === 'ethereum'
+									? ethIcon
+									: ''
+							}
+							className='size-10'
+						/>
+					</div>
+
+					<div className='text-[40px]'>{wallet?.name}</div>
 				</div>
 
-				<div className='text-[40px]'>{wallet?.name}</div>
+				<ChainSelectionDropDown
+					coinType={wallet?.coinType!}
+					value={chainValue}
+					setValue={setChainValue}
+				/>
 			</div>
 
 			<WalletInfo
 				wallet={wallet!}
 				setTokenBalance={setTokenBalance}
 				tokenBalance={tokenBalance}
+				chainValue={chainValue}
 			/>
 			<Modal>
 				<WalletAction
 					wallet={wallet!}
 					tokenBalance={tokenBalance}
+					chainValue={chainValue}
 				/>
 			</Modal>
 

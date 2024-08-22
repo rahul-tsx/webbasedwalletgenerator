@@ -5,20 +5,65 @@ import { FC, useState } from 'react';
 interface AirdropSectionProps {
 	wallet: Wallet;
 	changeStatus: (message: string, variant?: variantTypes) => void;
+	chainValue: SolanaChain | EthereumChain | null;
 }
 
-const AirdropSection: FC<AirdropSectionProps> = ({ changeStatus, wallet }) => {
+const AirdropSection: FC<AirdropSectionProps> = ({
+	changeStatus,
+	wallet,
+	chainValue,
+}) => {
 	const [loading, setLoading] = useState(false);
 	const handleSolDrop = async () => {
 		setLoading(true);
 		try {
-			const msg = await solDrop(wallet.publicKey);
+			if (chainValue === 'mainnet') {
+				throw new Error('Cannot perform airdrop on mainnet');
+			}
+			const msg = await solDrop(wallet.publicKey, chainValue as SolanaChain);
 			changeStatus(msg as string, 'success');
 		} catch (error) {
-			changeStatus(
-				'An Error Occured while air dropping you might be rate limited',
-				'error'
-			);
+			if (error instanceof Error) {
+				changeStatus(
+					error.message === 'Cannot perform airdrop on mainnet'
+						? error.message
+						: 'An error occurred while airdropping; you might be rate limited',
+					error.message ? 'warning' : 'error'
+				);
+			} else {
+				changeStatus('An unknown error occurred', 'error');
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
+	const handleEthDrop = () => {
+		setLoading(true);
+		try {
+			if (chainValue === 'mainnet') {
+				throw new Error('Cannot perform airdrop on mainnet');
+			} else if (chainValue === 'holesky') {
+				window.open(
+					'https://cloud.google.com/application/web3/faucet/ethereum/holesky',
+					'_ blank'
+				);
+			} else if (chainValue === 'sepolia') {
+				window.open(
+					'https://cloud.google.com/application/web3/faucet/ethereum/sepolia',
+					'_ blank'
+				);
+			}
+		} catch (error) {
+			if (error instanceof Error) {
+				changeStatus(
+					error.message === 'Cannot perform airdrop on mainnet'
+						? error.message
+						: 'An error occurred while airdropping; you might be rate limited',
+					error.message ? 'warning' : 'error'
+				);
+			} else {
+				changeStatus('An unknown error occurred', 'error');
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -27,10 +72,7 @@ const AirdropSection: FC<AirdropSectionProps> = ({ changeStatus, wallet }) => {
 		if (wallet.coinType === 'solana') {
 			handleSolDrop();
 		} else if (wallet.coinType === 'ethereum') {
-			window.open(
-				'https://cloud.google.com/application/web3/faucet/ethereum/sepolia',
-				'_ blank'
-			);
+			handleEthDrop();
 		}
 	};
 	return (
@@ -40,7 +82,7 @@ const AirdropSection: FC<AirdropSectionProps> = ({ changeStatus, wallet }) => {
 			className=' col-span-2 col-start-2 relative inline-flex overflow-hidden rounded-[6px] p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50'>
 			<span className='absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00FFFF_0%,#A855F7_50%,#00FFFF_100%)]' />
 			<span className='inline-flex h-full w-full cursor-pointer items-center justify-center rounded-[6px]  bg-mybackground-dark px-3 py-3  text-lg font-medium text-white backdrop-blur-3xl'>
-				{!loading && `Airdrop 2 ${coinUnit[wallet.coinType]}`}
+				{!loading && `Airdrop  ${coinUnit[wallet.coinType]}`}
 				{loading && 'Requesting Airdrop'}
 			</span>
 		</button>

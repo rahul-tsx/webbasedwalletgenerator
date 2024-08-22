@@ -6,13 +6,19 @@ import { useModal } from '../ui/animated-modal';
 import AddReceiverModal from './AddReceiverModal';
 import SendTokenModal from './SendTokenModal';
 import { sendSol } from '@/utils/solanaValidation';
+import { sendEth } from '@/utils/ethereumValidation';
 
 interface WalletActionProps {
 	wallet: Wallet;
 	tokenBalance: number;
+	chainValue: SolanaChain | EthereumChain | null;
 }
 
-const WalletAction: FC<WalletActionProps> = ({ wallet, tokenBalance }) => {
+const WalletAction: FC<WalletActionProps> = ({
+	wallet,
+	tokenBalance,
+	chainValue,
+}) => {
 	const context = useContext(StatusContext);
 	const [receiverPubKey, setReceiverPubKey] = useState<string | null>(null);
 	const [amountToSend, setAmountToSend] = useState<number>(0);
@@ -53,7 +59,26 @@ const WalletAction: FC<WalletActionProps> = ({ wallet, tokenBalance }) => {
 				const signature = await sendSol(
 					wallet.privateKey,
 					receiverPubKey!,
-					amount
+					amount,
+					chainValue as SolanaChain
+				);
+
+				changeStatus(`Transaction Successful: ${signature}`, 'success');
+			} catch (error) {
+				console.log(error);
+				changeStatus(`Transaction Failed`, 'error');
+			} finally {
+				setLoading(false);
+				closeModal2();
+			}
+		}
+		if (wallet.coinType === 'ethereum') {
+			try {
+				const signature = await sendEth(
+					wallet.privateKey,
+					receiverPubKey!,
+					amount,
+					chainValue as EthereumChain
 				);
 
 				changeStatus(`Transaction Successful: ${signature}`, 'success');
@@ -71,6 +96,7 @@ const WalletAction: FC<WalletActionProps> = ({ wallet, tokenBalance }) => {
 			<AirdropSection
 				changeStatus={changeStatus}
 				wallet={wallet}
+				chainValue={chainValue}
 			/>
 			<button
 				className='col-span-2 col-start-6 border bg-white text-mybackground-dark font-bold p-2 px-4 flex items-center w-full rounded-lg space-x-2 justify-center group'

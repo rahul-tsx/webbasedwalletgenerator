@@ -51,6 +51,7 @@ const SendTokenForm = forwardRef<HTMLButtonElement, SendTokenFormProps>(
 		ref
 	) => {
 		const [maxSol, setMaxSol] = useState(maxAmount);
+		const [maxEth, setMaxEth] = useState(maxAmount);
 
 		const getFinalTokenBalance = (maxAmount: number, fees: number) => {
 			const totalLamports = maxAmount * LAMPORTS_PER_SOL;
@@ -94,7 +95,9 @@ const SendTokenForm = forwardRef<HTMLButtonElement, SendTokenFormProps>(
 				const fees = await checkNetworkFees(senderPubKey, receiverPubKey);
 				getFinalTokenBalance(maxAmount, fees ?? 0);
 			};
-			fetchNetworkFees();
+			if (coinType === 'solana') {
+				fetchNetworkFees();
+			}
 		}, [senderPubKey, receiverPubKey, maxAmount]);
 
 		useEffect(() => {

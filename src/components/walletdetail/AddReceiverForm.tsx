@@ -23,14 +23,27 @@ interface AddReceiverFormProps {
 	nextStep: () => void;
 	senderPubKey: string;
 }
-const getFormSchema = (senderPubKey: string) =>
+const getFormSchema = (senderPubKey: string, coinType: coinTypes) =>
 	z.object({
 		receiverPubKey: z
 			.string()
 			.min(1, 'Please enter receiver address')
-			.length(44, {
-				message: 'Invalid public key',
-			})
+			.refine(
+				(value) => {
+					if (coinType === 'solana') {
+						return value.length === 44;
+					} else if (coinType === 'ethereum') {
+						return value.length === 42;
+					}
+					return false;
+				},
+				{
+					message:
+						coinType === 'solana'
+							? 'Invalid Solana public key'
+							: 'Invalid Ethereum public key',
+				}
+			)
 			.refine((value) => value !== senderPubKey, {
 				message:
 					'Receiver public key cannot be the same as the sender public key',
@@ -45,7 +58,7 @@ const AddReceiverForm = forwardRef<HTMLButtonElement, AddReceiverFormProps>(
 		ref
 	) => {
 		const form = useForm<FormSchema>({
-			resolver: zodResolver(getFormSchema(senderPubKey)),
+			resolver: zodResolver(getFormSchema(senderPubKey, coinType)),
 		});
 
 		function onSubmit(values: FormSchema) {
