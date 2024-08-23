@@ -185,7 +185,7 @@ const WalletInfo: FC<WalletInfoProps> = ({
 				{wallet && (
 					<div className='col-span-4 flex items-center'>
 						<CopyToClipboard
-							text={wallet.publicKey}
+							text={wallet.privateKey}
 							onCopy={() =>
 								changeStatus('Private Key Copied to Clipboard!', 'success')
 							}>
