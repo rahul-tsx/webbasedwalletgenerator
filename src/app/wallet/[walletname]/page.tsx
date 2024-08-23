@@ -1,14 +1,12 @@
 'use client';
-import WalletInfo from '@/components/walletdetail/WalletInfo';
 import solIcon from '@/assets/images/solana-sol-logo.png';
 import ethIcon from '@/assets/images/Ethereum-logo.png';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { FC, useEffect, useState } from 'react';
 import WalletTransaction from '@/components/walletdetail/WalletTransaction';
-import WalletAction from '@/components/walletdetail/WalletAction';
-import { Modal } from '@/components/ui/animated-modal';
 import ChainSelectionDropDown from '@/components/walletdetail/ChainSelectionDropDown';
+import WalletDetailContainer from '@/components/walletdetail/WalletDetailContainer';
 
 interface pageProps {}
 
@@ -16,6 +14,7 @@ const WalletDetailsPage: FC<pageProps> = ({}) => {
 	const params = useSearchParams();
 	const [wallet, setWallet] = useState<Wallet | null>(null);
 	const [tokenBalance, setTokenBalance] = useState<number>(0);
+	const [amountToSend, setAmountToSend] = useState<number>(0);
 	const [mounted, setMounted] = useState(false);
 	const [chainValue, setChainValue] = useState<
 		SolanaChain | EthereumChain | null
@@ -32,7 +31,6 @@ const WalletDetailsPage: FC<pageProps> = ({}) => {
 			setWallet(retrieveWalletById(id));
 		}
 	}, [params]);
-	
 
 	useEffect(() => {
 		setMounted(true);
@@ -69,20 +67,13 @@ const WalletDetailsPage: FC<pageProps> = ({}) => {
 					setValue={setChainValue}
 				/>
 			</div>
-
-			<WalletInfo
-				wallet={wallet!}
+			<WalletDetailContainer
+				chainValue={chainValue}
+				setAmountToSend={setAmountToSend}
 				setTokenBalance={setTokenBalance}
 				tokenBalance={tokenBalance}
-				chainValue={chainValue}
+				wallet={wallet!}
 			/>
-			<Modal>
-				<WalletAction
-					wallet={wallet!}
-					tokenBalance={tokenBalance}
-					chainValue={chainValue}
-				/>
-			</Modal>
 
 			<WalletTransaction />
 		</div>

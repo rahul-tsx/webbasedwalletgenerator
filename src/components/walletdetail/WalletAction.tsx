@@ -1,5 +1,12 @@
 import StatusContext from '@/context/statusContext';
-import { FC, useContext, useRef, useState } from 'react';
+import {
+	Dispatch,
+	FC,
+	SetStateAction,
+	useContext,
+	useRef,
+	useState,
+} from 'react';
 import AirdropSection from './AirdropSection';
 import { IoIosSend } from 'react-icons/io';
 import { useModal } from '../ui/animated-modal';
@@ -12,24 +19,25 @@ interface WalletActionProps {
 	wallet: Wallet;
 	tokenBalance: number;
 	chainValue: SolanaChain | EthereumChain | null;
+	setAmountToSend: Dispatch<SetStateAction<number>>;
+	fetchBalance: () => void;
 }
 
 const WalletAction: FC<WalletActionProps> = ({
 	wallet,
 	tokenBalance,
 	chainValue,
+	setAmountToSend,
+	fetchBalance,
 }) => {
 	const context = useContext(StatusContext);
 	const [receiverPubKey, setReceiverPubKey] = useState<string | null>(null);
-	const [amountToSend, setAmountToSend] = useState<number>(0);
 	const [loading, setLoading] = useState(false);
 	const {
-		isOpen: isOpen1,
 		closeModal: closeModal1,
 		openModal: openModal1,
 	} = useModal('selectReceiverModal1');
 	const {
-		isOpen: isOpen2,
 		closeModal: closeModal2,
 		openModal: openModal2,
 	} = useModal('sendTokenModal2');
@@ -62,6 +70,7 @@ const WalletAction: FC<WalletActionProps> = ({
 					amount,
 					chainValue as SolanaChain
 				);
+				fetchBalance();
 
 				changeStatus(`Transaction Successful: ${signature}`, 'success');
 			} catch (error) {
@@ -80,7 +89,7 @@ const WalletAction: FC<WalletActionProps> = ({
 					amount,
 					chainValue as EthereumChain
 				);
-
+				fetchBalance();
 				changeStatus(`Transaction Successful: ${signature}`, 'success');
 			} catch (error) {
 				console.log(error);
@@ -97,6 +106,7 @@ const WalletAction: FC<WalletActionProps> = ({
 				changeStatus={changeStatus}
 				wallet={wallet}
 				chainValue={chainValue}
+				fetchBalance={fetchBalance}
 			/>
 			<button
 				className='col-span-2 col-start-6 border bg-white text-mybackground-dark font-bold p-2 px-4 flex items-center w-full rounded-lg space-x-2 justify-center group'
