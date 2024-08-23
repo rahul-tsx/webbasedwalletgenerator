@@ -1,104 +1,28 @@
 import StatusContext from '@/context/statusContext';
-import { getEthBalance, getEthtoUsd } from '@/utils/ethereumValidation';
-import { getSolBalance, getSoltoUsd } from '@/utils/solanaValidation';
-import {
-	Dispatch,
-	FC,
-	SetStateAction,
-	useContext,
-	useEffect,
-	useState,
-} from 'react';
+import { FC, useContext, useState } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import RefreshButton from '../ui/refresh-button';
 import { coinUnit } from '@/constants/coinUnit';
+import TooltipComponent from '../TooltipComponent';
+import { digitConverter } from '@/utils/digitConverter';
 
 interface WalletInfoProps {
 	wallet: Wallet;
 	tokenBalance: number;
-	setTokenBalance: Dispatch<SetStateAction<number>>;
-	chainValue: SolanaChain | EthereumChain | null;
+	valueBalance: dollarChart;
+	fetchBalance: () => {};
 }
 
-interface dollarChart {
-	totalValue: number | null;
-	percentageChange: string | null;
-	priceDifference: string | null;
-	currentPrice: number | null;
-}
 const WalletInfo: FC<WalletInfoProps> = ({
 	wallet,
-	setTokenBalance,
 	tokenBalance,
-	chainValue,
+	valueBalance,
+	fetchBalance,
 }) => {
 	const [visibleBalance, setVisibleBalance] = useState(false);
 	const [visiblePkey, setVisiblePkey] = useState(false);
 	const [visibleTokenBalance, setVisibleTokenBalance] = useState(false);
-	const [valueBalance, setvalueBalance] = useState<dollarChart>({
-		currentPrice: null,
-		percentageChange: null,
-		priceDifference: null,
-		totalValue: null,
-	});
-
-	const fetchBalance = async () => {
-		let balance;
-		let dollar;
-		if (wallet.coinType === 'solana') {
-			if (chainValue) {
-				balance = await getSolBalance(
-					wallet.publicKey,
-					chainValue as SolanaChain
-				);
-			} else {
-				balance = await getSolBalance(wallet.publicKey);
-			}
-
-			dollar = await getSoltoUsd(
-				balance || 0,
-				valueBalance?.currentPrice || null
-			);
-
-			if (dollar) {
-				setvalueBalance({
-					totalValue: dollar.totalValue,
-					percentageChange: dollar.percentageChange,
-					priceDifference: dollar.priceDifference,
-					currentPrice: dollar.currentPrice,
-				});
-			}
-		}
-		if (wallet.coinType === 'ethereum') {
-			if (chainValue) {
-				balance = await getEthBalance(
-					wallet.publicKey,
-					chainValue as EthereumChain
-				);
-			} else {
-				balance = await getEthBalance(wallet.publicKey);
-			}
-			dollar = await getEthtoUsd(
-				balance || 0,
-				valueBalance?.currentPrice || null
-			);
-
-			if (dollar) {
-				setvalueBalance({
-					totalValue: dollar.totalValue,
-					percentageChange: dollar.percentageChange,
-					priceDifference: dollar.priceDifference,
-					currentPrice: dollar.currentPrice,
-				});
-			}
-		}
-		setTokenBalance(balance || 0);
-	};
-
-	useEffect(() => {
-		fetchBalance();
-	}, [chainValue]);
 
 	const toggleVisibleBalance = () => {
 		setVisibleBalance((prev) => !prev);
@@ -135,9 +59,18 @@ const WalletInfo: FC<WalletInfoProps> = ({
 					<div className='flex justify-between z-10'>
 						<h2 className='text-white text-5xl font-bold'>
 							${' '}
-							{visibleBalance
-								? valueBalance.totalValue?.toFixed(2) || 0
-								: '***'}
+							{visibleBalance ? (
+								<TooltipComponent
+									triggerValue={digitConverter(
+										valueBalance.totalValue || 0,
+										false
+									)}
+									fullValue={valueBalance.totalValue?.toFixed(4) || 0}
+									unit={'USD'}
+								/>
+							) : (
+								'***'
+							)}
 						</h2>
 						<button
 							onClick={toggleVisibleBalance}
@@ -183,7 +116,15 @@ const WalletInfo: FC<WalletInfoProps> = ({
 				<div className='flex flex-col gap-2'>
 					<div className='flex justify-between z-10'>
 						<h2 className='text-white text-5xl font-bold'>
-							{visibleTokenBalance ? tokenBalance : '***'}{' '}
+							{visibleTokenBalance ? (
+								<TooltipComponent
+									triggerValue={digitConverter(tokenBalance, true)}
+									fullValue={tokenBalance}
+									unit={coinUnit[wallet.coinType]}
+								/>
+							) : (
+								'***'
+							)}{' '}
 							<span className='text-lg'>{coinUnit[wallet.coinType]}</span>
 						</h2>
 						<button

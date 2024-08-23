@@ -6,12 +6,14 @@ interface AirdropSectionProps {
 	wallet: Wallet;
 	changeStatus: (message: string, variant?: variantTypes) => void;
 	chainValue: SolanaChain | EthereumChain | null;
+	fetchBalance: () => void;
 }
 
 const AirdropSection: FC<AirdropSectionProps> = ({
 	changeStatus,
 	wallet,
 	chainValue,
+	fetchBalance,
 }) => {
 	const [loading, setLoading] = useState(false);
 	const handleSolDrop = async () => {
@@ -21,6 +23,7 @@ const AirdropSection: FC<AirdropSectionProps> = ({
 				throw new Error('Cannot perform airdrop on mainnet');
 			}
 			const msg = await solDrop(wallet.publicKey, chainValue as SolanaChain);
+			fetchBalance();
 			changeStatus(msg as string, 'success');
 		} catch (error) {
 			if (error instanceof Error) {

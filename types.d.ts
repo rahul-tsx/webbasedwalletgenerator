@@ -28,3 +28,9 @@ type statusObj = { msg: string; variant: variantTypes };
 interface DropdownValue {
 	[(key in SolanaChain) | (key in EthereumChain)]: ChainDetails;
 }
+interface dollarChart {
+	totalValue: number | null;
+	percentageChange: string | null;
+	priceDifference: string | null;
+	currentPrice: number | null;
+}

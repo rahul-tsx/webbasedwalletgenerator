@@ -42,7 +42,7 @@ export const getSolBalance = async (
 			'confirmed'
 		);
 
-		// console.log(coinChain.solana[chain].link);
+		
 		const walletBalance = await connection.getBalance(solanaPublicKey);
 		return walletBalance / LAMPORTS_PER_SOL;
 	} catch (error) {
