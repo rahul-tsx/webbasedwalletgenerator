@@ -3,7 +3,7 @@ import nacl from 'tweetnacl';
 import { derivePath } from 'ed25519-hd-key';
 import bs58 from 'bs58';
 import axios from 'axios';
-import {
+import web3, {
 	clusterApiUrl,
 	Connection,
 	Keypair,
@@ -14,6 +14,29 @@ import {
 	Transaction,
 	Message,
 } from '@solana/web3.js';
+
+import {
+	ASSOCIATED_TOKEN_PROGRAM_ID,
+	createInitializeMetadataPointerInstruction,
+	createInitializeMintInstruction,
+	createMint,
+	ExtensionType,
+	getMintLen,
+	getOrCreateAssociatedTokenAccount,
+	getTokenMetadata,
+	LENGTH_SIZE,
+	mintTo,
+	TOKEN_2022_PROGRAM_ID,
+	TYPE_SIZE,
+} from '@solana/spl-token';
+
+import {
+	createInitializeInstruction,
+	createUpdateFieldInstruction,
+	createRemoveKeyInstruction,
+	pack,
+	TokenMetadata,
+} from '@solana/spl-token-metadata';
 //@ts-ignore
 import { SYSTEM_INSTRUCTION_LAYOUTS } from '@solana/web3.js';
 
@@ -42,7 +65,6 @@ export const getSolBalance = async (
 			'confirmed'
 		);
 
-		
 		const walletBalance = await connection.getBalance(solanaPublicKey);
 		return walletBalance / LAMPORTS_PER_SOL;
 	} catch (error) {
@@ -178,4 +200,209 @@ export const getSoltoUsd = async (
 		console.error('Error fetching SOL to USD price:', error);
 		return null;
 	}
+};
+export const createToken = async (
+	connection: Connection,
+	payerAddress: Keypair,
+	mintAuthority: PublicKey,
+	decimals: number
+) => {
+	const mint = await createMint(
+		connection,
+		payerAddress,
+		mintAuthority,
+		null,
+		decimals,
+		undefined,
+		undefined,
+		TOKEN_2022_PROGRAM_ID
+	);
+	console.log('Mint created at ', mint.toBase58());
+	return mint.toBase58();
+};
+
+export const mintToken = async (
+	connection: Connection,
+	payerAddress: Keypair,
+	mint: PublicKey,
+	mintAuthority: PublicKey,
+	amount: number
+) => {
+	const tokenAccount = await getOrCreateAssociatedTokenAccount(
+		connection,
+		payerAddress,
+		new PublicKey(mint),
+		payerAddress.publicKey,
+		undefined,
+		undefined,
+		undefined,
+		TOKEN_2022_PROGRAM_ID,
+		ASSOCIATED_TOKEN_PROGRAM_ID
+	);
+	console.log('Token account created at', tokenAccount.address.toBase58());
+	await mintTo(
+		connection,
+		payerAddress,
+		new PublicKey(mint),
+		tokenAccount.address,
+		mintAuthority,
+		amount,
+		undefined,
+		undefined,
+		TOKEN_2022_PROGRAM_ID
+	);
+	console.log('Minted', amount, 'tokens to', tokenAccount.address.toBase58());
+};
+
+const addMetadata = async (
+	connection: Connection,
+	tokenName: string,
+	tokenSymbol: string,
+	tokenMetadataURI: string = 'https://raw.githubusercontent.com/solana-developers/opos-asset/main/assets/DeveloperPortal/metadata.json',
+	payer: Keypair,
+	decimals: number
+) => {
+	const mintKeypair = Keypair.generate();
+	// Address for Mint Account
+	const mint = mintKeypair.publicKey;
+	console.log('Mint public key:', mint);
+	const metadata: TokenMetadata = {
+		mint: mint,
+		name: tokenName,
+		symbol: tokenSymbol,
+		uri: tokenMetadataURI,
+		additionalMetadata: [],
+	};
+
+	const mintLen = getMintLen([ExtensionType.MetadataPointer]);
+	const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
+	const mintLamports = await connection.getMinimumBalanceForRentExemption(
+		mintLen + metadataLen
+	);
+	const mintTransaction = new Transaction().add(
+		SystemProgram.createAccount({
+			fromPubkey: payer.publicKey,
+			newAccountPubkey: mint,
+			space: mintLen,
+			lamports: mintLamports,
+			programId: TOKEN_2022_PROGRAM_ID,
+		}),
+		createInitializeMetadataPointerInstruction(
+			mint,
+			payer.publicKey,
+			mint,
+			TOKEN_2022_PROGRAM_ID
+		),
+		createInitializeMintInstruction(
+			mint,
+			decimals,
+			payer.publicKey,
+			null,
+			TOKEN_2022_PROGRAM_ID
+		),
+		createInitializeInstruction({
+			programId: TOKEN_2022_PROGRAM_ID,
+			mint: mint,
+			metadata: mint,
+			name: metadata.name,
+			symbol: metadata.symbol,
+			uri: metadata.uri,
+			mintAuthority: payer.publicKey,
+			updateAuthority: payer.publicKey,
+		})
+	);
+	const trasnactionSig = await sendAndConfirmTransaction(
+		connection,
+		mintTransaction,
+		[payer, mintKeypair]
+	);
+	console.log('Transaction signature metadata:', trasnactionSig);
+	return { transactionSig: trasnactionSig, mintAddress: mintKeypair };
+};
+
+export const createTokenAndMint = async (
+	privKey: string,
+	amount: number,
+	tokenname: string,
+	tokenSymbol: string,
+	metadataURI: string,
+	decimals: number
+) => {
+	//Initial Config
+	const connection = new Connection(clusterApiUrl('devnet'));
+	const privateKey = bs58.decode(privKey);
+	const payerAddress = Keypair.fromSecretKey(privateKey);
+	const mintAuthority = payerAddress;
+	try {
+		console.log('Adding Metadata');
+		const metadata = await addMetadata(
+			connection,
+			tokenname,
+			tokenSymbol,
+			metadataURI,
+			payerAddress,
+			decimals
+		);
+		console.log(metadata);
+		console.log('Minting Token');
+		await mintToken(
+			connection,
+			payerAddress,
+			metadata.mintAddress.publicKey,
+			mintAuthority.publicKey,
+			amount * parseInt('1'.padEnd(decimals + 1, '0'))
+		);
+		return metadata.mintAddress.publicKey.toBase58();
+	} catch (error) {
+		console.log(error);
+		throw 'Something went wrong';
+	}
+};
+
+export const getAccountTokens = async (
+	pubkey: string
+): Promise<TokenData[] | null> => {
+	const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+	const tokens = await connection.getParsedTokenAccountsByOwner(
+		new PublicKey(pubkey),
+		{
+			programId: new PublicKey(TOKEN_2022_PROGRAM_ID),
+		}
+	);
+	const tokenArray: { mint: string; amount: string }[] = tokens.value.map(
+		(token) => {
+			return {
+				mint: token.account.data.parsed.info.mint,
+				amount: token.account.data.parsed.info.tokenAmount.uiAmountString,
+			};
+		}
+	);
+	if (!tokenArray || tokenArray.length === 0) return null;
+	const tokenData = await Promise.all(
+		tokenArray.map(async (mintAddress) => {
+			console.log('my mintAddress:', mintAddress);
+			const tokenMetadataInfo = await getTokenMetadata(
+				connection,
+				new PublicKey(mintAddress.mint),
+				undefined,
+				TOKEN_2022_PROGRAM_ID
+			);
+			let imageUrl: string | null = null;
+			if (tokenMetadataInfo?.uri) {
+				try {
+					const response = await axios.get(tokenMetadataInfo.uri);
+
+					const metadata = response.data;
+
+					imageUrl = metadata.image;
+				} catch (error) {
+					console.error('Error fetching metadata with axios:', error);
+				}
+			}
+
+			return { mintAddress, tokenMetadataInfo, imageUrl };
+		})
+	);
+
+	return tokenData;
 };

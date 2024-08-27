@@ -82,7 +82,7 @@ const AirdropSection: FC<AirdropSectionProps> = ({
 		<button
 			onClick={handleDrop}
 			disabled={loading}
-			className=' col-span-2 col-start-2 relative inline-flex overflow-hidden rounded-[6px] p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50'>
+			className=' col-span-2 col-start-4 relative inline-flex overflow-hidden rounded-[6px] p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50'>
 			<span className='absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00FFFF_0%,#A855F7_50%,#00FFFF_100%)]' />
 			<span className='inline-flex h-full w-full cursor-pointer items-center justify-center rounded-[6px]  bg-mybackground-dark px-3 py-3  text-lg font-medium text-white backdrop-blur-3xl'>
 				{!loading && `Airdrop  ${coinUnit[wallet.coinType]}`}

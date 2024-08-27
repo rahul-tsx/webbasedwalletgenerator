@@ -1,58 +1,67 @@
+import { FC, RefObject } from 'react';
+import {
+	ModalBody,
+	ModalContent,
+	ModalFooter,
+} from '@/components/ui/animated-modal';
 import { coinUnit } from '@/constants/coinUnit';
-import { Dispatch, FC, RefObject, SetStateAction } from 'react';
-import { ModalBody, ModalContent, ModalFooter } from '../ui/animated-modal';
-import AddReceiverForm from './AddReceiverForm';
-
-interface AddReceiverModalProps {
+import MintTokenForm from './MintTokenForm';
+interface MintTokenModalProps {
 	modalId: string;
 	wallet: Wallet;
-	setReceiverPubKey: Dispatch<SetStateAction<string | null>>;
 	onCancel: () => void;
-	nextStep: () => void;
+	nextStep: (
+		amount: number,
+		tokenName: string,
+		tokenSymbol: string,
+		metadataURI: string,
+		decimals: number
+	) => void;
 	handleNextClick: () => void;
-	modal1Ref: RefObject<HTMLButtonElement>;
+	modal3Ref: RefObject<HTMLButtonElement>;
+	loading: boolean;
 }
 
-const AddReceiverModal: FC<AddReceiverModalProps> = ({
-	modalId,
-	wallet,
-	setReceiverPubKey,
-	onCancel,
-	nextStep,
+const MintTokenModal: FC<MintTokenModalProps> = ({
 	handleNextClick,
-	modal1Ref,
+	modal3Ref,
+	modalId,
+	nextStep,
+	onCancel,
+	loading,
+	wallet,
 }) => {
 	return (
 		<ModalBody modalId={modalId}>
-			<ModalContent className='gap-5 bg-slate-800'>
+			<ModalContent className='gap-5 bg-slate-800 '>
 				<div className='flex justify-between'>
 					<h1 className='text-lg lg:text-2xl font-bold capitalize'>
-						Send {coinUnit[wallet.coinType]}
+						Mint {coinUnit[wallet.coinType]} Token
 					</h1>
 				</div>
-				<AddReceiverForm
-					coinType={wallet.coinType}
-					setReceiverPubKey={setReceiverPubKey}
+
+				<MintTokenForm
 					closeModal={onCancel}
 					nextStep={nextStep}
-					ref={modal1Ref}
-					senderPubKey={wallet.publicKey}
+					ref={modal3Ref}
 				/>
 			</ModalContent>
 			<ModalFooter className='gap-4 '>
 				<button
 					onClick={onCancel}
+					disabled={loading}
 					className='px-2 py-1 bg-gray-200 text-black dark:bg-slate-800 dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28 text-center'>
 					cancel
 				</button>
 				<button
 					onClick={handleNextClick}
 					className='px-2 py-1 bg-gray-200 text-black dark:bg-slate-800 dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28 text-center'>
-					Next
+					{!loading && 'Mint'}
+					{loading && 'Processing ...'}
 				</button>
 			</ModalFooter>
 		</ModalBody>
 	);
 };
 
-export default AddReceiverModal;
+export default MintTokenModal;

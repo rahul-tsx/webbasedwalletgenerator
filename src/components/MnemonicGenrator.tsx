@@ -33,7 +33,7 @@ const MnemonicGenrator: FC<MnemonicGenratorProps> = ({
 	setStatus,
 	mnemonic,
 }) => {
-	const { isOpen,closeModal,openModal } = useModal("mneumonicModal")
+	const { isOpen, closeModal, openModal } = useModal('mneumonicModal');
 	const [alertOpen, setAlertOpen] = useState(false);
 
 	const triggerAlertBox = () => {
@@ -76,12 +76,14 @@ const MnemonicGenrator: FC<MnemonicGenratorProps> = ({
 						</h1>
 						<CopyToClipboard
 							text={mnemonic}
-							onCopy={() => setStatus('Secret Phrase copied to clipboard!','success')}>
+							onCopy={() =>
+								setStatus('Secret Phrase copied to clipboard!', 'success')
+							}>
 							<BiCopy className='ml-2 cursor-pointer size-10' />
 						</CopyToClipboard>
 					</div>
 
-					<ul className='grid lg:grid-cols-2 xl:grid-cols-3  gap-y-10 gap-x-5 max-h-[200px] md:max-h-[250px] xl:max-h-[350px] overflow-y-auto scrollbar-dark '>
+					<ul className='grid lg:grid-cols-2 xl:grid-cols-3  gap-y-10 gap-x-5 max-h-[200px] md:max-h-[250px] xl:max-h-[350px] overflow-y-auto'>
 						{mnemonic.split(' ').map((word, index) => (
 							<li
 								key={index}

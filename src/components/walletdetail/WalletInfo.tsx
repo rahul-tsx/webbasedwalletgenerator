@@ -149,13 +149,13 @@ const WalletInfo: FC<WalletInfoProps> = ({
 					</p>
 				</div>
 			</div>
-			<div className='col-span-2 -col-start-3 my-5'>
+			{/* <div className='col-span-2 -col-start-3 my-5'>
 				<RefreshButton
 					onClick={fetchBalance}
 					text='Refresh Balance'
 					duration={5000}
 				/>
-			</div>
+			</div> */}
 
 			<div className='grid grid-cols-6 col-span-8  w-full space-x-5 items-center'>
 				<label className='text-xl font-bold text-white col-span-1'>

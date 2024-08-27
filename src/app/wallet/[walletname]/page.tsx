@@ -4,9 +4,9 @@ import ethIcon from '@/assets/images/Ethereum-logo.png';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { FC, useEffect, useState } from 'react';
-import WalletTransaction from '@/components/walletdetail/WalletTransaction';
 import ChainSelectionDropDown from '@/components/walletdetail/ChainSelectionDropDown';
 import WalletDetailContainer from '@/components/walletdetail/WalletDetailContainer';
+import WalletTabs from '@/components/walletdetail/wallettabs/WalletTabs';
 
 interface pageProps {}
 
@@ -74,8 +74,7 @@ const WalletDetailsPage: FC<pageProps> = ({}) => {
 				tokenBalance={tokenBalance}
 				wallet={wallet!}
 			/>
-
-			<WalletTransaction />
+			<WalletTabs wallet={wallet!} />
 		</div>
 	);
 };

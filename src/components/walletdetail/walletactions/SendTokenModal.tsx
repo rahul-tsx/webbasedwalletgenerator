@@ -1,6 +1,6 @@
 import { coinUnit } from '@/constants/coinUnit';
 import { Dispatch, FC, RefObject, SetStateAction } from 'react';
-import { ModalBody, ModalContent, ModalFooter } from '../ui/animated-modal';
+import { ModalBody, ModalContent, ModalFooter } from '../../ui/animated-modal';
 import SendTokenForm from './SendTokenForm';
 
 interface SendTokenModalProps {

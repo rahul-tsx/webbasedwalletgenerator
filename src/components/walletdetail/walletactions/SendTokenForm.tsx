@@ -21,9 +21,8 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from '../ui/form';
-import { Input } from '../ui/input';
-import { Button } from '../ui/button';
+} from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
 import { coinUnit } from '@/constants/coinUnit';
 import Image from 'next/image';
 import { checkNetworkFees } from '@/utils/solanaValidation';

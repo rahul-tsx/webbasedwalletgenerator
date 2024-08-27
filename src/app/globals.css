@@ -81,7 +81,7 @@
 .scrollbar-dark {
 	scrollbar-width: thin;
 	scrollbar-color: #1a1a1a #000000;
-	padding-right: 1rem; /* Thumb color and track color */
+	 /* Thumb color and track color */
 }
 
 .scrollbar-dark::-webkit-scrollbar {

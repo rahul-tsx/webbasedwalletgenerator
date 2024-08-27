@@ -10,17 +10,21 @@ interface TooltipComponentProps {
 	triggerValue: string | number;
 	fullValue: string | number;
 	unit?: string;
+	triggerClassname?: string;
 }
 
 const TooltipComponent: FC<TooltipComponentProps> = ({
 	triggerValue,
 	fullValue,
 	unit,
+	triggerClassname,
 }) => {
 	return (
 		<TooltipProvider>
 			<Tooltip>
-				<TooltipTrigger>{triggerValue}</TooltipTrigger>
+				<TooltipTrigger className={triggerClassname}>
+					{triggerValue}
+				</TooltipTrigger>
 				<TooltipContent className='bg-slate-600 border-neonYellow'>
 					<p>
 						{fullValue} {unit}
