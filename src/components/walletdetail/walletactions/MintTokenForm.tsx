@@ -32,7 +32,7 @@ const getFormSchema = () =>
 		tokenName: z.string().min(1, 'Please enter token name'),
 		tokenSymbol: z.string().min(1, 'Please enter token symbol'),
 		decimals: z
-			.union([z.string(), z.number()]) 
+			.union([z.string(), z.number()])
 			.transform((value) => {
 				if (typeof value === 'string') {
 					return parseFloat(value);
@@ -171,7 +171,7 @@ const MintTokenForm = forwardRef<HTMLButtonElement, MintTokenFormProps>(
 									/>
 								</FormControl>
 								<FormDescription>
-									The URL to your token's metadata JSON file.
+									{`The URL to your token's metadata JSON file.`}
 								</FormDescription>
 								<FormMessage className='text-red-600 text-[16px] mx-5 font-semibold' />
 							</FormItem>
