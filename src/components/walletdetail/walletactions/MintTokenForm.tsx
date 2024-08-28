@@ -53,6 +53,9 @@ const getFormSchema = () =>
 			.url('Must be a valid URL')
 			.refine((url) => url.startsWith('https://'), {
 				message: 'URL must start with https://',
+			})
+			.refine((url) => url.endsWith('.json'), {
+				message: 'URL must be for a json file',
 			}),
 		amount: z
 			.string()
