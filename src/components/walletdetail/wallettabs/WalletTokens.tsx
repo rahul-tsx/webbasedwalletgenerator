@@ -9,9 +9,10 @@ import { BiCopy } from 'react-icons/bi';
 interface WalletTokensProps {
 	pubKey: string;
 	cointype: coinTypes;
+	chain: SolanaChain | EthereumChain | null;
 }
 
-const WalletTokens: FC<WalletTokensProps> = ({ pubKey, cointype }) => {
+const WalletTokens: FC<WalletTokensProps> = ({ pubKey, cointype, chain }) => {
 	const [tokens, setTokens] = useState<TokenData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const context = useContext(StatusContext);
@@ -25,12 +26,15 @@ const WalletTokens: FC<WalletTokensProps> = ({ pubKey, cointype }) => {
 	useEffect(() => {
 		const fetchTokens = async () => {
 			setLoading(true);
-			const fetchedTokens = await getAccountTokens(pubKey);
+			const fetchedTokens = await getAccountTokens(
+				pubKey,
+				chain as SolanaChain
+			);
 			setTokens(fetchedTokens);
 			setLoading(false);
 		};
 		if (cointype === 'solana') fetchTokens();
-	}, [pubKey]);
+	}, [pubKey, chain]);
 	return (
 		<div className='flex flex-col'>
 			<h1 className='text-3xl '>Your Tokens</h1>

@@ -201,6 +201,7 @@ export const getSoltoUsd = async (
 		return null;
 	}
 };
+//Not using
 export const createToken = async (
 	connection: Connection,
 	payerAddress: Keypair,
@@ -262,7 +263,7 @@ const addMetadata = async (
 	decimals: number
 ) => {
 	const mintKeypair = Keypair.generate();
-	
+
 	const mint = mintKeypair.publicKey;
 	console.log('Mint public key:', mint);
 	const metadata: TokenMetadata = {
@@ -326,10 +327,11 @@ export const createTokenAndMint = async (
 	tokenname: string,
 	tokenSymbol: string,
 	metadataURI: string,
-	decimals: number
+	decimals: number,
+	chain: SolanaChain
 ) => {
 	//Initial Config
-	const connection = new Connection(clusterApiUrl('devnet'));
+	const connection = new Connection(coinChain.solana[chain].link, 'confirmed');
 	const privateKey = bs58.decode(privKey);
 	const payerAddress = Keypair.fromSecretKey(privateKey);
 	const mintAuthority = payerAddress;
@@ -359,9 +361,10 @@ export const createTokenAndMint = async (
 };
 
 export const getAccountTokens = async (
-	pubkey: string
+	pubkey: string,
+	chain: SolanaChain
 ): Promise<TokenData[] | null> => {
-	const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+	const connection = new Connection(coinChain.solana[chain].link, 'confirmed');
 	const tokens = await connection.getParsedTokenAccountsByOwner(
 		new PublicKey(pubkey),
 		{
@@ -405,3 +408,5 @@ export const getAccountTokens = async (
 
 	return tokenData;
 };
+
+

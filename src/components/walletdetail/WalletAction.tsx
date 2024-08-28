@@ -89,7 +89,8 @@ const WalletAction: FC<WalletActionProps> = ({
 				tokenName,
 				tokenSymbol,
 				metadataURI,
-				decimals
+				decimals,
+				chainValue as SolanaChain
 			);
 			fetchBalance();
 			changeStatus(`Token ${mint} Minted`, 'success');

@@ -5,9 +5,10 @@ import WalletTokens from './WalletTokens';
 
 interface WalletTabsProps {
 	wallet: Wallet;
+	chainValue: SolanaChain | EthereumChain | null;
 }
 
-const WalletTabs: FC<WalletTabsProps> = ({ wallet }) => {
+const WalletTabs: FC<WalletTabsProps> = ({ wallet, chainValue }) => {
 	const [selectedTab, setSelectedTab] = useState<TabList>('transactions');
 	let content;
 	if (selectedTab === 'transactions') {
@@ -17,6 +18,7 @@ const WalletTabs: FC<WalletTabsProps> = ({ wallet }) => {
 			<WalletTokens
 				pubKey={wallet.publicKey}
 				cointype={wallet.coinType}
+				chain={chainValue}
 			/>
 		);
 	}
