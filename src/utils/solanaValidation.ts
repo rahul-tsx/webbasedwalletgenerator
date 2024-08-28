@@ -234,10 +234,9 @@ export const mintToken = async (
 		new PublicKey(mint),
 		payerAddress.publicKey,
 		undefined,
+		'finalized',
 		undefined,
-		undefined,
-		TOKEN_2022_PROGRAM_ID,
-		ASSOCIATED_TOKEN_PROGRAM_ID
+		TOKEN_2022_PROGRAM_ID
 	);
 	console.log('Token account created at', tokenAccount.address.toBase58());
 	await mintTo(
@@ -248,7 +247,7 @@ export const mintToken = async (
 		mintAuthority,
 		amount,
 		undefined,
-		undefined,
+		{ commitment: 'finalized', maxRetries: 5 },
 		TOKEN_2022_PROGRAM_ID
 	);
 	console.log('Minted', amount, 'tokens to', tokenAccount.address.toBase58());
@@ -263,7 +262,7 @@ const addMetadata = async (
 	decimals: number
 ) => {
 	const mintKeypair = Keypair.generate();
-	// Address for Mint Account
+	
 	const mint = mintKeypair.publicKey;
 	console.log('Mint public key:', mint);
 	const metadata: TokenMetadata = {
@@ -314,7 +313,8 @@ const addMetadata = async (
 	const trasnactionSig = await sendAndConfirmTransaction(
 		connection,
 		mintTransaction,
-		[payer, mintKeypair]
+		[payer, mintKeypair],
+		{ commitment: 'finalized' }
 	);
 	console.log('Transaction signature metadata:', trasnactionSig);
 	return { transactionSig: trasnactionSig, mintAddress: mintKeypair };
@@ -343,7 +343,6 @@ export const createTokenAndMint = async (
 			payerAddress,
 			decimals
 		);
-		console.log(metadata);
 		console.log('Minting Token');
 		await mintToken(
 			connection,
