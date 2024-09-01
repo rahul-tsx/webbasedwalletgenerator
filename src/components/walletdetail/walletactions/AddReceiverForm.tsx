@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { coinUnit } from '@/constants/coinUnit';
+import { validateSolanaAddress } from '@/utils/solanaValidation';
 
 interface AddReceiverFormProps {
 	coinType: coinTypes;
@@ -31,7 +32,7 @@ const getFormSchema = (senderPubKey: string, coinType: coinTypes) =>
 			.refine(
 				(value) => {
 					if (coinType === 'solana') {
-						return value.length === 44;
+						return validateSolanaAddress(value);
 					} else if (coinType === 'ethereum') {
 						return value.length === 42;
 					}
@@ -65,7 +66,7 @@ const AddReceiverForm = forwardRef<HTMLButtonElement, AddReceiverFormProps>(
 			setReceiverPubKey(values.receiverPubKey);
 			closeModal();
 			nextStep();
-			console.log('hello');
+		
 		}
 		return (
 			<Form {...form}>

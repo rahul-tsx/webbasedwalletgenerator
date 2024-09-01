@@ -4,6 +4,7 @@ import WalletAction from './WalletAction';
 import WalletInfo from './WalletInfo';
 import { getSolBalance, getSoltoUsd } from '@/utils/solanaValidation';
 import { getEthBalance, getEthtoUsd } from '@/utils/ethereumValidation';
+import WalletTabs from './wallettabs/WalletTabs';
 
 interface WalletDetailContainerProps {
 	wallet: Wallet;
@@ -76,7 +77,9 @@ const WalletDetailContainer: FC<WalletDetailContainerProps> = ({
 				});
 			}
 		}
+
 		setTokenBalance(balance || 0);
+		return balance;
 	};
 
 	useEffect(() => {
@@ -100,6 +103,11 @@ const WalletDetailContainer: FC<WalletDetailContainerProps> = ({
 					fetchBalance={fetchBalance}
 				/>
 			</Modal>
+			<WalletTabs
+				wallet={wallet!}
+				chainValue={chainValue}
+				fetchBalance={fetchBalance}
+			/>
 		</div>
 	);
 };

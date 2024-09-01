@@ -74,10 +74,7 @@ const WalletDetailsPage: FC<pageProps> = ({}) => {
 				tokenBalance={tokenBalance}
 				wallet={wallet!}
 			/>
-			<WalletTabs
-				wallet={wallet!}
-				chainValue={chainValue}
-			/>
+		
 		</div>
 	);
 };

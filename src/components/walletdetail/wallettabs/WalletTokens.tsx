@@ -1,20 +1,37 @@
 import TooltipComponent from '@/components/TooltipComponent';
 import StatusContext from '@/context/statusContext';
-import { getAccountTokens } from '@/utils/solanaValidation';
+import {
+	getAccountTokens,
+	getSolBalance,
+	transferMintedToken,
+} from '@/utils/solanaValidation';
 import { TbTransfer, TbTransferVertical } from 'react-icons/tb';
-import { FC, useContext, useEffect, useState } from 'react';
+import { FC, useContext, useEffect, useRef, useState } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { BiCopy } from 'react-icons/bi';
+import { useModal } from '@/components/ui/animated-modal';
+import TransferMintedTokenModal from './TransferMintedTokenModal';
+import AddReceiverForTokenModal from './AddReceiverForTokenModal';
 
 interface WalletTokensProps {
 	pubKey: string;
 	cointype: coinTypes;
 	chain: SolanaChain | EthereumChain | null;
+	wallet: Wallet;
+	fetchBalance: () => Promise<number | undefined>;
 }
 
-const WalletTokens: FC<WalletTokensProps> = ({ pubKey, cointype, chain }) => {
+const WalletTokens: FC<WalletTokensProps> = ({
+	pubKey,
+	cointype,
+	chain,
+	wallet,
+	fetchBalance,
+}) => {
 	const [tokens, setTokens] = useState<TokenData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
+	const [currentToken, setCurrentToken] = useState<TokenData | null>(null);
+	const [receiverPubKey, setReceiverPubKey] = useState<string | null>(null);
 	const context = useContext(StatusContext);
 
 	if (!context) {
@@ -22,21 +39,99 @@ const WalletTokens: FC<WalletTokensProps> = ({ pubKey, cointype, chain }) => {
 	}
 
 	const { changeStatus } = context;
+	const { closeModal: closeModal1, openModal: openModal1 } = useModal(
+		'addReceiverTokenModal1'
+	);
+	const modal1Ref = useRef<HTMLButtonElement>(null);
+	const handleModal1Click = () => {
+		if (modal1Ref.current) {
+			modal1Ref.current.click();
+		}
+	};
+	const { closeModal: closeModal2, openModal: openModal2 } = useModal(
+		'transferTokenModal2'
+	);
+	const modal2Ref = useRef<HTMLButtonElement>(null);
+	const handleModal2Click = () => {
+		if (modal2Ref.current) {
+			modal2Ref.current.click();
+		}
+	};
+	const fetchSolBalance = async () => {
+		const balance = await fetchBalance();
+		if (balance === undefined || balance <= 0.00001) return false;
+		return true;
+	};
+	const handleTransferClick = async (token: TokenData) => {
+		setCurrentToken(token);
 
-	useEffect(() => {
-		const fetchTokens = async () => {
-			setLoading(true);
-			const fetchedTokens = await getAccountTokens(
-				pubKey,
-				chain as SolanaChain
+		if (cointype === 'ethereum') {
+			changeStatus('Minting not available in Ethereum chain yet', 'warning');
+		} else if (cointype === 'solana') {
+			const balanceAvailable = await fetchSolBalance();
+			if (balanceAvailable) {
+				openModal1();
+			} else {
+				changeStatus('Insufficient Sol to transfer token', 'warning');
+			}
+		}
+	};
+
+	const sendSplToken = async (amount: number) => {
+		setLoading(true);
+		// DNDbAAumWbRr9fBm6RqjEmuA1prwff8kPmptxNkXEnno
+		try {
+			const signature = await transferMintedToken(
+				chain as SolanaChain,
+				wallet.privateKey,
+				receiverPubKey!,
+				currentToken!.mintAddress.mint,
+				amount
 			);
-			setTokens(fetchedTokens);
+			fetchBalance();
+			fetchTokens();
+
+			changeStatus(`Token transfer Successful: ${signature}`, 'success');
+		} catch (error) {
+			console.log(error);
+			changeStatus(`Token transfer`, 'error');
+		} finally {
 			setLoading(false);
-		};
+			closeModal2();
+		}
+	};
+	const fetchTokens = async () => {
+		setLoading(true);
+		const fetchedTokens = await getAccountTokens(pubKey, chain as SolanaChain);
+		setTokens(fetchedTokens);
+		setLoading(false);
+	};
+	useEffect(() => {
 		if (cointype === 'solana') fetchTokens();
 	}, [pubKey, chain]);
 	return (
 		<div className='flex flex-col'>
+			<TransferMintedTokenModal
+				modalId={'transferTokenModal2'}
+				handleNextClick={handleModal2Click}
+				nextStep={sendSplToken}
+				onCancel={closeModal2}
+				loading={loading}
+				token={currentToken}
+				modal2Ref={modal2Ref}
+				receiverPubKey={receiverPubKey!}
+				senderPubKey={wallet.publicKey}
+			/>
+			<AddReceiverForTokenModal
+				handleNextClick={handleModal1Click}
+				modal1Ref={modal1Ref}
+				modalId='addReceiverTokenModal1'
+				nextStep={openModal2}
+				onCancel={closeModal1}
+				setReceiverPubKey={setReceiverPubKey}
+				tokenName={currentToken?.tokenMetadataInfo?.name || ''}
+				wallet={wallet}
+			/>
 			<h1 className='text-3xl '>Your Tokens</h1>
 			{loading ? (
 				<p className='text-xl text-center p-5 bg-slate-800 rounded-lg my-10'>
@@ -101,7 +196,10 @@ const WalletTokens: FC<WalletTokensProps> = ({ pubKey, cointype, chain }) => {
 								{token.mintAddress.amount} {token.tokenMetadataInfo?.symbol}
 							</p>
 							<p>
-								<TbTransferVertical size={25} />
+								<TbTransferVertical
+									size={25}
+									onClick={() => handleTransferClick(token)}
+								/>
 							</p>
 						</div>
 					))}

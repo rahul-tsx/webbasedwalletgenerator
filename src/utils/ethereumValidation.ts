@@ -55,7 +55,6 @@ export const sendEth = async (
 ) => {
 	try {
 		const provider = new ethers.JsonRpcProvider(coinChain.ethereum[chain].link);
-		console.log(coinChain.ethereum[chain].link);
 		const wallet = new ethers.Wallet(privateKey, provider);
 
 		const tx = {

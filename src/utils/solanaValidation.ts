@@ -16,17 +16,20 @@ import web3, {
 } from '@solana/web3.js';
 
 import {
-	ASSOCIATED_TOKEN_PROGRAM_ID,
 	createInitializeMetadataPointerInstruction,
 	createInitializeMintInstruction,
 	createMint,
+	createTransferInstruction,
 	ExtensionType,
+	getAccount,
+	getMint,
 	getMintLen,
 	getOrCreateAssociatedTokenAccount,
 	getTokenMetadata,
 	LENGTH_SIZE,
 	mintTo,
 	TOKEN_2022_PROGRAM_ID,
+	transfer,
 	TYPE_SIZE,
 } from '@solana/spl-token';
 
@@ -239,7 +242,6 @@ export const mintToken = async (
 		undefined,
 		TOKEN_2022_PROGRAM_ID
 	);
-	console.log('Token account created at', tokenAccount.address.toBase58());
 	await mintTo(
 		connection,
 		payerAddress,
@@ -265,7 +267,6 @@ const addMetadata = async (
 	const mintKeypair = Keypair.generate();
 
 	const mint = mintKeypair.publicKey;
-	console.log('Mint public key:', mint);
 	const metadata: TokenMetadata = {
 		mint: mint,
 		name: tokenName,
@@ -317,10 +318,20 @@ const addMetadata = async (
 		[payer, mintKeypair],
 		{ commitment: 'finalized' }
 	);
-	console.log('Transaction signature metadata:', trasnactionSig);
 	return { transactionSig: trasnactionSig, mintAddress: mintKeypair };
 };
-
+export const validateSolanaAddress = (inputAddress: string) => {
+	if (inputAddress.length !== 43 && inputAddress.length !== 44) {
+		return false;
+	}
+	try {
+		new PublicKey(inputAddress);
+		return true;
+	} catch (error) {
+		console.error('Address validation error:', error);
+		return false;
+	}
+};
 export const createTokenAndMint = async (
 	privKey: string,
 	amount: number,
@@ -336,7 +347,6 @@ export const createTokenAndMint = async (
 	const payerAddress = Keypair.fromSecretKey(privateKey);
 	const mintAuthority = payerAddress;
 	try {
-		console.log('Adding Metadata');
 		const metadata = await addMetadata(
 			connection,
 			tokenname,
@@ -345,7 +355,6 @@ export const createTokenAndMint = async (
 			payerAddress,
 			decimals
 		);
-		console.log('Minting Token');
 		await mintToken(
 			connection,
 			payerAddress,
@@ -382,7 +391,6 @@ export const getAccountTokens = async (
 	if (!tokenArray || tokenArray.length === 0) return null;
 	const tokenData = await Promise.all(
 		tokenArray.map(async (mintAddress) => {
-			console.log('my mintAddress:', mintAddress);
 			const tokenMetadataInfo = await getTokenMetadata(
 				connection,
 				new PublicKey(mintAddress.mint),
@@ -408,5 +416,74 @@ export const getAccountTokens = async (
 
 	return tokenData;
 };
+const getMintInfo = async (
+	mintAddress: PublicKey,
+	connection: Connection
+): Promise<number> => {
+	const mintInfo = await getMint(
+		connection,
+		mintAddress,
+		undefined,
+		TOKEN_2022_PROGRAM_ID
+	);
+	return mintInfo.decimals;
+};
+
+export const transferMintedToken = async (
+	chain: SolanaChain = 'devnet',
+	privKey: string,
+	receiverPublicKey: string,
+	mintAddress: string,
+	amount: number
+) => {
+	try {
+		const connection = new Connection(
+			coinChain.solana[chain].link,
+			'confirmed'
+		);
+		const privateKey = bs58.decode(privKey);
+		const receiverPubKey = new PublicKey(receiverPublicKey);
+		const mint = new PublicKey(mintAddress);
+		const fromWallet = Keypair.fromSecretKey(privateKey);
+		const decimals = await getMintInfo(mint, connection);
+
+		const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+			connection,
+			fromWallet,
+			new PublicKey(mint),
+			receiverPubKey,
+			undefined,
+			'finalized',
+			{ maxRetries: 5, commitment: 'finalized' },
+			TOKEN_2022_PROGRAM_ID
+		);
+		const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+			connection,
+			fromWallet,
+			mint,
+			fromWallet.publicKey,
+			undefined,
+			'finalized',
+			{ maxRetries: 5 },
+			TOKEN_2022_PROGRAM_ID
+		);
 
 
+		let signature = await transfer(
+			connection,
+			fromWallet,
+			fromTokenAccount.address,
+			toTokenAccount.address,
+			fromWallet.publicKey,
+			parseInt('1'.padEnd(decimals + 1, '0')) * amount,
+			undefined,
+			{ commitment: 'finalized' },
+			TOKEN_2022_PROGRAM_ID
+		);
+
+		return signature;
+	} catch (error) {
+		console.log(error);
+		throw 'Something went wrong while transferring tokens';
+	}
+};

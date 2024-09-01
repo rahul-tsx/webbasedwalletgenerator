@@ -18,7 +18,6 @@ const WalletInfo: FC<WalletInfoProps> = ({
 	wallet,
 	tokenBalance,
 	valueBalance,
-	fetchBalance,
 }) => {
 	const [visibleBalance, setVisibleBalance] = useState(false);
 	const [visiblePkey, setVisiblePkey] = useState(false);

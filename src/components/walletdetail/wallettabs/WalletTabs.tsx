@@ -2,13 +2,19 @@ import { Tabs } from '@/components/ui/tabs';
 import { FC, useState } from 'react';
 import WalletTransaction from './WalletTransaction';
 import WalletTokens from './WalletTokens';
+import { Modal } from '@/components/ui/animated-modal';
 
 interface WalletTabsProps {
 	wallet: Wallet;
 	chainValue: SolanaChain | EthereumChain | null;
+	fetchBalance: () => Promise<number | undefined>;
 }
 
-const WalletTabs: FC<WalletTabsProps> = ({ wallet, chainValue }) => {
+const WalletTabs: FC<WalletTabsProps> = ({
+	wallet,
+	chainValue,
+	fetchBalance,
+}) => {
 	const [selectedTab, setSelectedTab] = useState<TabList>('transactions');
 	let content;
 	if (selectedTab === 'transactions') {
@@ -19,6 +25,8 @@ const WalletTabs: FC<WalletTabsProps> = ({ wallet, chainValue }) => {
 				pubKey={wallet.publicKey}
 				cointype={wallet.coinType}
 				chain={chainValue}
+				wallet={wallet}
+				fetchBalance={fetchBalance}
 			/>
 		);
 	}
@@ -36,7 +44,9 @@ const WalletTabs: FC<WalletTabsProps> = ({ wallet, chainValue }) => {
 				]}
 				setSelectedTab={setSelectedTab}
 			/>
-			<div style={{ minHeight: '100px' }}> {content}</div>
+			<div style={{ minHeight: '100px' }}>
+				<Modal>{content}</Modal>{' '}
+			</div>
 		</div>
 	);
 };

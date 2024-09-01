@@ -92,7 +92,7 @@ const MintTokenForm = forwardRef<HTMLButtonElement, MintTokenFormProps>(
 				values.metadataURI,
 				values.decimals
 			);
-			console.log('hello');
+		
 		}
 		return (
 			<Form {...form}>
