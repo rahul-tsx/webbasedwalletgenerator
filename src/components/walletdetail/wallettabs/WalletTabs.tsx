@@ -18,7 +18,12 @@ const WalletTabs: FC<WalletTabsProps> = ({
 	const [selectedTab, setSelectedTab] = useState<TabList>('transactions');
 	let content;
 	if (selectedTab === 'transactions') {
-		content = <WalletTransaction />;
+		content = (
+			<WalletTransaction
+				chain={chainValue}
+				wallet={wallet}
+			/>
+		);
 	} else if (selectedTab === 'tokens') {
 		content = (
 			<WalletTokens
