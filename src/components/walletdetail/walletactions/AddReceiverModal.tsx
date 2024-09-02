@@ -1,7 +1,7 @@
-import { coinUnit } from '@/constants/coinUnit';
 import { Dispatch, FC, RefObject, SetStateAction } from 'react';
 import { ModalBody, ModalContent, ModalFooter } from '../../ui/animated-modal';
 import AddReceiverForm from './AddReceiverForm';
+import { coinUnit } from '@/lib/constants';
 
 interface AddReceiverModalProps {
 	modalId: string;

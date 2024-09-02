@@ -1,4 +1,5 @@
-import { coinChain, ethPriceUrl } from '@/constants/coinUnit';
+
+import { coinChain, ethPriceUrl } from '@/lib/constants';
 import axios from 'axios';
 import { ethers, HDNodeWallet } from 'ethers';
 import { Wallet } from 'ethers';

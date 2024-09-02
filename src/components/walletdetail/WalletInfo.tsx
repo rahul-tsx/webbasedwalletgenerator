@@ -3,9 +3,9 @@ import { FC, useContext, useState } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import RefreshButton from '../ui/refresh-button';
-import { coinUnit } from '@/constants/coinUnit';
 import TooltipComponent from '../TooltipComponent';
 import { digitConverter } from '@/utils/digitConverter';
+import { coinUnit } from '@/lib/constants';
 
 interface WalletInfoProps {
 	wallet: Wallet;

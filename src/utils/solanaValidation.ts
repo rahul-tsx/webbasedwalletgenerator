@@ -1,4 +1,4 @@
-import { coinChain, solPriceUrl } from './../constants/coinUnit';
+
 import nacl from 'tweetnacl';
 import { derivePath } from 'ed25519-hd-key';
 import bs58 from 'bs58';
@@ -42,6 +42,7 @@ import {
 } from '@solana/spl-token-metadata';
 //@ts-ignore
 import { SYSTEM_INSTRUCTION_LAYOUTS } from '@solana/web3.js';
+import { coinChain, solPriceUrl } from '@/lib/constants';
 
 export const deriveSolanaWallet = (
 	path: string,
