@@ -1,4 +1,5 @@
-import { coinUnit } from '@/constants/coinUnit';
+
+import { coinUnit } from '@/lib/constants';
 import { solDrop } from '@/utils/solanaValidation';
 import { FC, useState } from 'react';
 

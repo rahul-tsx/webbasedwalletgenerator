@@ -4,7 +4,7 @@ import {
 	ModalContent,
 	ModalFooter,
 } from '@/components/ui/animated-modal';
-import { coinUnit } from '@/constants/coinUnit';
+import { coinUnit } from '@/lib/constants';
 import MintTokenForm from './MintTokenForm';
 interface MintTokenModalProps {
 	modalId: string;

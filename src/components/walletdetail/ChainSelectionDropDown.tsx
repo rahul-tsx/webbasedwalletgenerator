@@ -1,6 +1,7 @@
 import { Dispatch, FC, SetStateAction } from 'react';
 import DropdownMenu from '../ui/dropdown';
-import { coinChain } from '@/constants/coinUnit';
+import { coinChain } from '@/lib/constants';
+
 
 interface ChainSelectionDropDownProps {
 	coinType: coinTypes;

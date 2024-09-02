@@ -23,7 +23,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { coinUnit } from '@/constants/coinUnit';
+import { coinUnit } from '@/lib/constants';
 import Image from 'next/image';
 import { checkNetworkFees } from '@/utils/solanaValidation';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -97,7 +97,7 @@ const SendTokenForm = forwardRef<HTMLButtonElement, SendTokenFormProps>(
 			if (coinType === 'solana') {
 				fetchNetworkFees();
 			}
-		}, [senderPubKey, receiverPubKey, maxAmount]);
+		}, [senderPubKey, receiverPubKey, maxAmount, coinType]);
 
 		useEffect(() => {
 			if (amount > maxSol) {

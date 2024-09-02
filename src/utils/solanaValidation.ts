@@ -1,4 +1,3 @@
-import { coinChain, solPriceUrl } from './../constants/coinUnit';
 import nacl from 'tweetnacl';
 import { derivePath } from 'ed25519-hd-key';
 import bs58 from 'bs58';
@@ -13,6 +12,7 @@ import web3, {
 	SystemProgram,
 	Transaction,
 	Message,
+	ConfirmedSignatureInfo,
 } from '@solana/web3.js';
 
 import {
@@ -42,6 +42,7 @@ import {
 } from '@solana/spl-token-metadata';
 //@ts-ignore
 import { SYSTEM_INSTRUCTION_LAYOUTS } from '@solana/web3.js';
+import { coinChain, solPriceUrl } from '@/lib/constants';
 
 export const deriveSolanaWallet = (
 	path: string,
@@ -339,7 +340,7 @@ export const createTokenAndMint = async (
 	tokenSymbol: string,
 	metadataURI: string,
 	decimals: number,
-	chain: SolanaChain
+	chain: SolanaChain = 'devnet'
 ) => {
 	//Initial Config
 	const connection = new Connection(coinChain.solana[chain].link, 'confirmed');
@@ -371,7 +372,7 @@ export const createTokenAndMint = async (
 
 export const getAccountTokens = async (
 	pubkey: string,
-	chain: SolanaChain
+	chain: SolanaChain = 'devnet'
 ): Promise<TokenData[] | null> => {
 	const connection = new Connection(coinChain.solana[chain].link, 'confirmed');
 	const tokens = await connection.getParsedTokenAccountsByOwner(
@@ -468,7 +469,6 @@ export const transferMintedToken = async (
 			TOKEN_2022_PROGRAM_ID
 		);
 
-
 		let signature = await transfer(
 			connection,
 			fromWallet,
@@ -486,4 +486,70 @@ export const transferMintedToken = async (
 		console.log(error);
 		throw 'Something went wrong while transferring tokens';
 	}
+};
+
+export interface transactionList {
+	transaction: ConfirmedSignatureInfo;
+	status: string;
+}
+
+export const getSolTransactionList = async (
+	pubkey: string,
+	chain: SolanaChain = 'devnet'
+): Promise<transactionList[]> => {
+	const connection = new Connection(coinChain.solana[chain].link, 'finalized');
+	let numTx = 1000;
+
+	let transactionList = await connection.getSignaturesForAddress(
+		new PublicKey(pubkey),
+		{
+			limit: numTx,
+		}
+	);
+	const transactionSignatures = transactionList.map(
+		(transaction) => transaction.signature
+	);
+	const statuses = await connection.getSignatureStatuses(transactionSignatures);
+	console.log(statuses);
+	console.log(transactionSignatures);
+	console.log(statuses.value);
+	const response = transactionList.map((transaction, i) => {
+		let transactionStatus;
+		if (statuses.value[i]?.err) {
+			transactionStatus = 'error';
+		} else {
+			transactionStatus = 'success';
+		}
+		return { transaction, status: transactionStatus };
+	});
+	return response;
+};
+export const calculateDaysPassed = (blockTimeInSeconds: number): number => {
+	const transactionTime = new Date(blockTimeInSeconds * 1000);
+	const currentTime = new Date();
+	const timeDifference = currentTime.getTime() - transactionTime.getTime();
+	const daysPassed = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+	return daysPassed;
+};
+
+export const getSolTransactionDetails = async (
+	transactionList: web3.ConfirmedSignatureInfo[],
+	indexFrom: number,
+	chain: SolanaChain = 'devnet'
+) => {
+	const connection = new Connection(coinChain.solana[chain].link, 'finalized');
+	console.log(coinChain.solana[chain].link);
+	const transactionSignatures = transactionList
+		.slice(indexFrom, indexFrom + 12)
+		.map((transaction) => transaction.signature);
+
+	const detailedTransactions = [];
+	console.log(transactionSignatures);
+
+	const transactionDetails = await connection.getParsedTransactions(
+		transactionSignatures,
+		'finalized'
+	);
+	console.log(transactionDetails);
+	return transactionDetails;
 };
