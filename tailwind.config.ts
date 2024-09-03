@@ -1,5 +1,6 @@
 import type { Config } from 'tailwindcss';
 import { default as flattenColorPalette } from 'tailwindcss/lib/util/flattenColorPalette';
+import svgToDataUri from 'mini-svg-data-uri';
 
 const config = {
 	content: [
@@ -22,7 +23,7 @@ const config = {
 				// Background Colors
 				mybackground: {
 					dark: '#0f172a',
-				// Black background for dark mode
+					// Black background for dark mode
 					light: '#EFF9F0', // White background for light mode
 				},
 				// Text Colors
@@ -83,7 +84,7 @@ const config = {
 					foreground: 'hsl(var(--card-foreground))',
 				},
 			},
-			
+
 			boxShadow: {
 				neon: '0 0 5px #FFFFFF, 0 0 10px #FFFFFF, 0 0 15px #00FFFF, 0 0 20px #00FFFF, 0 0 25px #FFFF00, 0 0 30px #FFFF00',
 			},
@@ -169,8 +170,24 @@ const config = {
 		},
 	},
 
-	plugins: [require('tailwindcss-animate'), addVariablesForColors],
+	plugins: [
+		require('tailwindcss-animate'),
+		addVariablesForColors,
+		function ({ matchUtilities, theme }: any) {
+			matchUtilities(
+				{
+					'bg-dot-thick': (value: any) => ({
+						backgroundImage: `url("${svgToDataUri(
+							`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" fill="none"><circle fill="${value}" id="pattern-circle" cx="10" cy="10" r="2.5"></circle></svg>`
+						)}")`,
+					}),
+				},
+				{ values: flattenColorPalette(theme('backgroundColor')), type: 'color' }
+			);
+		},
+	],
 } satisfies Config;
+
 function addVariablesForColors({ addBase, theme }: any) {
 	let allColors = flattenColorPalette(theme('colors'));
 	let newVars = Object.fromEntries(
