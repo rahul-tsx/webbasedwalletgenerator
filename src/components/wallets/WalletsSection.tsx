@@ -7,15 +7,15 @@ import {
 	useState,
 } from 'react';
 import { Button } from '../ui/button';
-import { mnemonicToSeedSync } from 'bip39';
-import { deriveEthereumWallet } from '@/utils/ethereumValidation';
 
 import { useModal } from '@/components/ui/animated-modal';
-import { v4 as uuidv4 } from 'uuid';
 import AlertBox from '../AlertBox';
-import { deriveSolanaWallet } from '@/utils/solanaValidation';
+
 import WalletList from './WalletList';
 import AddNewWalletModal from './AddNewWalletModal';
+import { deriveWallet } from '@/utils/util';
+import { decryptMnemonic } from '@/utils/handleSecretKey';
+import { useAuthStore } from '@/store/auth';
 
 interface WalletsSectionProps {
 	mnemonic: string;
@@ -31,7 +31,7 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 	const [deleteWalletPubkey, setDeleteWalletPubkey] = useState<string | null>(
 		null
 	);
-
+	const { localPassword } = useAuthStore();
 	const triggerWalletBox = () => {
 		openModal();
 	};
@@ -52,81 +52,34 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 		}
 	};
 
-	const deriveWallet = ({
-		mnemonic,
+	const createNewWallet = ({
 		coinType = 'solana',
-		walletName = `Wallet ${index + 1}`,
+		walletName,
 	}: {
-		mnemonic: string;
 		coinType: string;
 		walletName: string;
 	}) => {
-		const seed = mnemonicToSeedSync(mnemonic);
+		const storedEncryptedMnemonic = localStorage.getItem('encryptedMnemonic');
 
-		let tempIndex = index;
-		const paths = {
-			solana: `m/44'/501'/${tempIndex}'/0'`,
-			ethereum: `m/44'/60'/0'/0/${tempIndex}`,
-			bitcoin: `m/44'/0'/${tempIndex}'/0/0`,
-		};
-
-		let publicKey: string = '';
-		let privateKey: string = '';
-		let newWallet: any;
-		let existingWallets = JSON.parse(localStorage.getItem('wallets') || '[]');
-		let isDuplicate = true;
-
-		// Loop until a unique public key is found
-		while (isDuplicate) {
-			if (coinType === 'solana') {
-				const path = paths[coinType];
-				const solwallet = deriveSolanaWallet(path, seed);
-				privateKey = solwallet.privateKey;
-				publicKey = solwallet.publicKey;
-			} else if (coinType === 'ethereum') {
-				const ethereumWallet = deriveEthereumWallet(seed, paths.ethereum);
-				privateKey = ethereumWallet.privateKey;
-				publicKey = ethereumWallet.address;
-			} else if (coinType === 'bitcoin') {
-				// const path = paths.bitcoin;
-				// const hdKey = HDKey.fromMasterSeed(Buffer.from(seed));
-				// const child = hdKey.derive(path);
-				// const ck = new CoinKey(child.privateKey, bitcoin.networks);
-				// publicKey = ck.publicAddress;
-				// privateKey = ck.privateKey.toString('hex');
-			}
-
-			newWallet = {
-				publicKey,
-				privateKey,
-				coinType,
-				name: walletName,
-				id: uuidv4(),
-				pathIndex: tempIndex,
-				slug: walletName
-					.replace(' ', '_')
-					.concat('_')
-					.concat(coinType)
-					.toLowerCase(),
-			};
-
-			isDuplicate = existingWallets.some(
-				(wallet: Wallet) => wallet.publicKey === publicKey
-			);
-
-			if (isDuplicate) {
-				tempIndex++;
-				paths.solana = `m/44'/501'/${tempIndex}'/0'`;
-				paths.ethereum = `m/44'/60'/0'/0/${tempIndex}`;
-				paths.bitcoin = `m/44'/0'/${tempIndex}'/0/0`;
-			}
+		if (!storedEncryptedMnemonic) {
+			setStatus('Menumonic Deleted create new one', 'warning');
+			return;
 		}
 
-		const updatedWallets = [...existingWallets, newWallet];
-		localStorage.setItem('wallets', JSON.stringify(updatedWallets));
+		const decryptedMnemonic = decryptMnemonic(
+			storedEncryptedMnemonic,
+			localPassword!
+		);
+
+		const { index: currentIndex, updatedWallets } = deriveWallet(
+			decryptedMnemonic!,
+			coinType,
+			index,
+			walletName
+		);
 
 		setWallets(updatedWallets);
-		setIndex(tempIndex + 1);
+		setIndex(currentIndex);
 		closeModal();
 	};
 
@@ -175,11 +128,11 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 			/>{' '}
 			<AddNewWalletModal
 				id='AddWalletModal'
-				deriveWallet={deriveWallet}
+				isOpen={isOpen}
+				deriveWallet={createNewWallet}
 				formRef={formRef}
 				handleSubmitClick={handleSubmitClick}
 				index={index}
-				mnemonic={mnemonic}
 				closeModal={closeModal}
 			/>
 			<AlertBox

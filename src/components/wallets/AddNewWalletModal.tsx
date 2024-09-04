@@ -1,18 +1,17 @@
 import { Dispatch, FC, RefObject, SetStateAction } from 'react';
 import { ModalBody, ModalContent, ModalFooter } from '../ui/animated-modal';
 import CreateWalletForm from './CreateWalletForm';
+import { withPasswordMiddleware } from '../PasswordMiddleware';
 
 interface AddNewWalletModalProps {
 	formRef: RefObject<HTMLButtonElement>;
 	id: string;
 	index: number;
-	mnemonic: string;
+	isOpen: boolean;
 	deriveWallet: ({
-		mnemonic,
 		coinType,
 		walletName,
 	}: {
-		mnemonic: string;
 		coinType: string;
 		walletName: string;
 	}) => void;
@@ -26,7 +25,6 @@ const AddNewWalletModal: FC<AddNewWalletModalProps> = ({
 	formRef,
 	handleSubmitClick,
 	index,
-	mnemonic,
 	closeModal,
 }) => {
 	return (
@@ -41,7 +39,6 @@ const AddNewWalletModal: FC<AddNewWalletModalProps> = ({
 
 					<CreateWalletForm
 						ref={formRef}
-						defaultSecretPhrase={mnemonic}
 						index={index + 1}
 						createWallet={deriveWallet}
 					/>
@@ -63,4 +60,4 @@ const AddNewWalletModal: FC<AddNewWalletModalProps> = ({
 	);
 };
 
-export default AddNewWalletModal;
+export default withPasswordMiddleware(AddNewWalletModal);

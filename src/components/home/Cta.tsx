@@ -8,6 +8,10 @@ import bcrypt from 'bcryptjs';
 import LoginModal from './LoginModal';
 import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
+import SelectActionModal from './SelectActionModal';
+import SecretPharseModal from './SecretPharseModal';
+import { encryptMnemonic, validatePassword } from '@/utils/handleSecretKey';
+import { deriveWallet } from '@/utils/util';
 
 interface CtaProps {}
 
@@ -17,7 +21,11 @@ const Cta: FC<CtaProps> = ({}) => {
 		useModal('setPasswordModal1');
 	const { closeModal: closeModal2, openModal: openModal2 } =
 		useModal('loginWalletModal2');
-	const [localPassword, setLocalPassword] = useState<string | null>(null);
+	const { closeModal: closeModal3, openModal: openModal3 } =
+		useModal('onBoarding1');
+	const { closeModal: closeModal4, openModal: openModal4 } =
+		useModal('onBoarding2');
+
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	if (!context) {
@@ -27,10 +35,11 @@ const Cta: FC<CtaProps> = ({}) => {
 	const { changeStatus } = context;
 	const modal1Ref = useRef<HTMLButtonElement>(null);
 	const modal2Ref = useRef<HTMLButtonElement>(null);
-	const { setAuthStatus } = useAuthStore();
+
+	const { setAuthStatus, setLocalPassword, localPassword } = useAuthStore();
 	const router = useRouter();
 
-	const handleOnboarding = () => {
+	const handleLogin = () => {
 		if (!sessionStorage.getItem('isAuth')) {
 			if (localStorage.getItem('localPassword')) {
 				openModal2();
@@ -45,18 +54,18 @@ const Cta: FC<CtaProps> = ({}) => {
 		const hash = localStorage.getItem('localPassword');
 
 		if (hash) {
-			bcrypt.compare(password, hash, function (err, res) {
-				if (res) {
-					closeModal2();
-					setErrorMessage(null);
+			const isPasswordValid = await validatePassword(password, hash);
+			if (isPasswordValid) {
+				closeModal2();
+				setErrorMessage(null);
 
-					setAuthStatus(true);
-					sessionStorage.setItem('isAuth', 'true');
-					router.push('/wallet');
-				} else {
-					setErrorMessage('Wrong password. Try Again !!!');
-				}
-			});
+				setAuthStatus(true);
+				sessionStorage.setItem('isAuth', 'true');
+				setLocalPassword(password);
+				router.push('/wallet');
+			} else {
+				setErrorMessage('Wrong password. Try Again !!!');
+			}
 		} else {
 			setErrorMessage('No password found');
 			closeModal2();
@@ -64,12 +73,24 @@ const Cta: FC<CtaProps> = ({}) => {
 	};
 
 	const handlePassword = async (password: string) => {
-		console.log(password);
 		bcrypt.genSalt(10, function (err, salt) {
 			bcrypt.hash(password, salt, function (err, hash) {
 				localStorage.setItem('localPassword', hash);
 			});
 		});
+		setLocalPassword(password);
+		openModal3();
+	};
+	const handlePrimarySecretKey = (secret: string) => {
+		if (localPassword) {
+			const encryptedMnemonic = encryptMnemonic(secret, localPassword);
+			localStorage.setItem('encryptedMnemonic', encryptedMnemonic);
+			deriveWallet(secret);
+			setAuthStatus(true);
+			sessionStorage.setItem('isAuth', 'true');
+			closeModal4();
+			router.push('/wallet');
+		}
 	};
 
 	const handleModal1Click = () => {
@@ -82,6 +103,7 @@ const Cta: FC<CtaProps> = ({}) => {
 			modal2Ref.current.click();
 		}
 	};
+
 	return (
 		<>
 			<div className='flex items-center'>
@@ -95,11 +117,11 @@ const Cta: FC<CtaProps> = ({}) => {
 						y: [20, -5, 0],
 					}}
 					transition={{
-						delay: 2.5,
+						// delay: 2.5,
 						duration: 0.5,
 						ease: [0.4, 0.0, 0.2, 1],
 					}}
-					onClick={handleOnboarding}
+					onClick={handleLogin}
 					className='relative mx-auto inline-flex overflow-hidden rounded-[6px] p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 md:min-w-[250px]'>
 					<span className='absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00FFFF_0%,#A855F7_50%,#00FFFF_100%)]' />
 					<span className='inline-flex h-full w-full cursor-pointer items-center justify-center rounded-[6px]  bg-mybackground-dark px-3 py-3  text-lg font-medium text-white backdrop-blur-3xl'>
@@ -121,6 +143,23 @@ const Cta: FC<CtaProps> = ({}) => {
 				onCancel={closeModal2}
 				nextStep={handlePasswordCheck}
 				errorMessage={errorMessage}
+			/>
+			<SelectActionModal
+				modalId={'onBoarding1'}
+				generateWallet={() => {
+					openModal4();
+					closeModal3();
+				}}
+				importWallet={() => console.log('import wallet')}
+			/>
+			<SecretPharseModal
+				modalId='onBoarding2'
+				setStatus={changeStatus}
+				closeModal={() => {
+					openModal3();
+					closeModal4();
+				}}
+				nextStep={handlePrimarySecretKey}
 			/>
 		</>
 	);

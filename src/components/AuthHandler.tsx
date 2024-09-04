@@ -9,7 +9,6 @@ const AuthHandler: FC<AuthHandlerProps> = ({}) => {
 
 	useEffect(() => {
 		const isAuth = sessionStorage.getItem('isAuth') === 'true';
-		console.log(isAuth);
 		setAuthStatus(isAuth);
 	}, [setAuthStatus]);
 	return <></>;
