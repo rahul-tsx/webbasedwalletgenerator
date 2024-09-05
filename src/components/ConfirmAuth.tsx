@@ -6,10 +6,11 @@ import { useModal } from './ui/animated-modal';
 
 interface ConfirmAuthProps {
 	onSuccess: () => void;
+	onExit: () => void;
 	open: boolean;
 }
 
-const ConfirmAuth: FC<ConfirmAuthProps> = ({ onSuccess, open }) => {
+const ConfirmAuth: FC<ConfirmAuthProps> = ({ onSuccess, open, onExit }) => {
 	const { closeModal: closeModal1, openModal: openModal1 } =
 		useModal('passwordCheckModal');
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -49,7 +50,10 @@ const ConfirmAuth: FC<ConfirmAuthProps> = ({ onSuccess, open }) => {
 			errorMessage={errorMessage}
 			handleNextClick={handleModal2Click}
 			nextStep={handlePasswordCheck}
-			onCancel={closeModal1}
+			onCancel={() => {
+				closeModal1();
+				onExit();
+			}}
 			type='check'
 			modal2Ref={modal2Ref}
 		/>

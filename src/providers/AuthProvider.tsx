@@ -15,17 +15,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 	if (!context) {
 		throw new Error('useContext must be used within a Provider');
 	}
-	
+
 	const { changeStatus } = context;
 
 	useEffect(() => {
-		if (!isAuthenticated) {
+		const isLoggingOut = sessionStorage.getItem('isLoggingOut');
+
+		if (!isAuthenticated && !isLoggingOut) {
+			changeStatus('Permission Denied,Please log in!', 'error');
 			router.push('/');
 		}
-	}, [isAuthenticated, router]);
+
+		if (isLoggingOut) {
+			sessionStorage.removeItem('isLoggingOut');
+		}
+	}, [isAuthenticated, router, changeStatus]);
 
 	if (!isAuthenticated) {
-		changeStatus('Not Logged In', 'error');
 		return null;
 	}
 

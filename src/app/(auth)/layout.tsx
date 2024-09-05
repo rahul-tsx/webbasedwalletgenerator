@@ -10,7 +10,7 @@ const walletLayout: FC<walletLayoutProps> = ({ children }) => {
 	return (
 		<ProtectedRoute>
 			<div className='myContainer'>
-				<Navbar />
+				<Navbar type='auth'/>
 			</div>
 
 			{children}
