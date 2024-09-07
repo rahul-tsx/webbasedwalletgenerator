@@ -12,7 +12,7 @@ interface AddNewWalletModalProps {
 		coinType,
 		walletName,
 	}: {
-		coinType: string;
+		coinType: coinTypes;
 		walletName: string;
 	}) => void;
 	closeModal: () => void;

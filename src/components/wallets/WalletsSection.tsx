@@ -56,7 +56,7 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 		coinType = 'solana',
 		walletName,
 	}: {
-		coinType: string;
+		coinType: coinTypes;
 		walletName: string;
 	}) => {
 		const storedEncryptedMnemonic = localStorage.getItem('encryptedMnemonic');
@@ -134,6 +134,7 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 				handleSubmitClick={handleSubmitClick}
 				index={index}
 				closeModal={closeModal}
+				
 			/>
 			<AlertBox
 				open={deleteAlert}

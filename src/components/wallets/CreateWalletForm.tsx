@@ -28,7 +28,7 @@ interface CreateWalletFormProps {
 		walletName,
 	}: {
 		// mnemonic: string;
-		coinType: string;
+		coinType: coinTypes;
 		walletName: string;
 	}) => void;
 }
@@ -45,7 +45,7 @@ const formSchema = z.object({
 	// 		message: 'Secret phrase must contain exactly 12 words.',
 	// 	}
 	// ),
-	coinType: z.enum(['solana', 'ethereum', 'bitcoin'], {
+	coinType: z.enum(['solana', 'ethereum'], {
 		errorMap: () => ({
 			message: 'Coin type must be one of: solana, ethereum, or bitcoin.',
 		}),
@@ -53,9 +53,14 @@ const formSchema = z.object({
 });
 
 const CreateWalletForm = forwardRef<HTMLButtonElement, CreateWalletFormProps>(
-	({ createWallet,
-		//  defaultSecretPhrase, 
-		 index }, ref) => {
+	(
+		{
+			createWallet,
+			//  defaultSecretPhrase,
+			index,
+		},
+		ref
+	) => {
 		const form = useForm<z.infer<typeof formSchema>>({
 			resolver: zodResolver(formSchema),
 			defaultValues: {
