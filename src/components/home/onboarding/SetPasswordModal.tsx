@@ -1,5 +1,5 @@
 import { FC, RefObject } from 'react';
-import { ModalBody, ModalContent, ModalFooter } from '../ui/animated-modal';
+import { ModalBody, ModalContent, ModalFooter } from '../../ui/animated-modal';
 import SetPasswordForm from './SetPasswordForm';
 
 interface SetPasswordModalProps {

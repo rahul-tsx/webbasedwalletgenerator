@@ -1,12 +1,12 @@
 import { basePaths } from '@/lib/constants';
 import { mnemonicToSeedSync } from 'bip39';
-import { deriveSolanaWallet } from './solanaValidation';
-import { deriveEthereumWallet } from './ethereumValidation';
+import { deriveSolanaWallet, getSolBalance } from './solanaValidation';
+import { deriveEthereumWallet, getEthBalance } from './ethereumValidation';
 import { v4 as uuidv4 } from 'uuid';
 
 export const deriveWallet = (
 	mnemonic: string,
-	coinType: string = 'solana',
+	coinType: coinTypes = 'solana',
 	index: number = 0,
 	walletName: string = `Wallet ${index + 1}`
 ) => {
@@ -76,4 +76,88 @@ export const deriveWallet = (
 		updatedWallets,
 		index: tempIndex + 1,
 	};
+};
+export type previewObject = {
+	pubkey: string;
+	balance: number;
+	index: number;
+	coin: coinTypes;
+};
+
+export interface walletPreviewReturn {
+	solWalletPreview: previewObject[];
+	ethWalletPreview: previewObject[];
+}
+
+export const walletPreview = async (
+	mnemonic: string,
+	index?: number
+): Promise<walletPreviewReturn> => {
+	const seed = mnemonicToSeedSync(mnemonic);
+
+	let publicKey: string = '';
+	let privateKey: string = '';
+	let solWalletPreview: previewObject[] = [];
+	let ethWalletPreview: previewObject[] = [];
+	if (index) {
+		const solwallet = deriveSolanaWallet(
+			basePaths.solana.replace('x', index.toString()),
+			seed
+		);
+		privateKey = solwallet.privateKey;
+		publicKey = solwallet.publicKey;
+		const solBalance = await getSolBalance(publicKey);
+		solWalletPreview.push({
+			pubkey: publicKey,
+			balance: solBalance || 0,
+			index,
+			coin: 'solana',
+		});
+		const ethereumWallet = deriveEthereumWallet(
+			seed,
+			basePaths.ethereum.replace('x', index.toString())
+		);
+		privateKey = ethereumWallet.privateKey;
+		publicKey = ethereumWallet.address;
+		const ethBalance = await getEthBalance(publicKey);
+		ethWalletPreview.push({
+			pubkey: publicKey,
+			balance: ethBalance || 0,
+			index,
+			coin: 'ethereum',
+		});
+		return { solWalletPreview, ethWalletPreview };
+	}
+	for (let i = 0; i <= 5; i++) {
+		const solwallet = deriveSolanaWallet(
+			basePaths.solana.replace('x', i.toString()),
+			seed
+		);
+		privateKey = solwallet.privateKey;
+		publicKey = solwallet.publicKey;
+		const solBalance = await getSolBalance(publicKey);
+		solWalletPreview.push({
+			pubkey: publicKey,
+			balance: solBalance || 0,
+			index: i,
+			coin: 'solana',
+		});
+	}
+	for (let i = 0; i <= 5; i++) {
+		const ethereumWallet = deriveEthereumWallet(
+			seed,
+			basePaths.ethereum.replace('x', i.toString())
+		);
+		privateKey = ethereumWallet.privateKey;
+		publicKey = ethereumWallet.address;
+		const ethBalance = await getEthBalance(publicKey);
+		ethWalletPreview.push({
+			pubkey: publicKey,
+			balance: ethBalance || 0,
+			index: i,
+			coin: 'ethereum',
+		});
+	}
+	
+	return { solWalletPreview, ethWalletPreview };
 };

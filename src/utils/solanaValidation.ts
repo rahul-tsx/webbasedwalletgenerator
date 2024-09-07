@@ -510,9 +510,7 @@ export const getSolTransactionList = async (
 		(transaction) => transaction.signature
 	);
 	const statuses = await connection.getSignatureStatuses(transactionSignatures);
-	console.log(statuses);
-	console.log(transactionSignatures);
-	console.log(statuses.value);
+	
 	const response = transactionList.map((transaction, i) => {
 		let transactionStatus;
 		if (statuses.value[i]?.err) {
@@ -538,18 +536,16 @@ export const getSolTransactionDetails = async (
 	chain: SolanaChain = 'devnet'
 ) => {
 	const connection = new Connection(coinChain.solana[chain].link, 'finalized');
-	console.log(coinChain.solana[chain].link);
 	const transactionSignatures = transactionList
 		.slice(indexFrom, indexFrom + 12)
 		.map((transaction) => transaction.signature);
 
 	const detailedTransactions = [];
-	console.log(transactionSignatures);
+
 
 	const transactionDetails = await connection.getParsedTransactions(
 		transactionSignatures,
 		'finalized'
 	);
-	console.log(transactionDetails);
 	return transactionDetails;
 };

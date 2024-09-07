@@ -5,8 +5,8 @@ import {
 	FC,
 	SetStateAction,
 	useEffect,
-	useRef,
 	useState,
+	useRef,
 } from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 
@@ -25,17 +25,16 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from '@/components/ui/popover';
+import { coinList } from '@/lib/constants';
 
 interface DropdownProps {
-	dropdownValue: DropdownChainValue;
-	defaultChain: SolanaChain | EthereumChain;
-	value: SolanaChain | EthereumChain | null;
-	setValue: Dispatch<SetStateAction<SolanaChain | EthereumChain | null>>;
+	defaultCoin: coinTypes;
+	value: coinTypes;
+	setValue: Dispatch<SetStateAction<coinTypes>>;
 }
 
 const DropdownMenu: FC<DropdownProps> = ({
-	dropdownValue,
-	defaultChain,
+	defaultCoin = 'solana',
 	setValue,
 	value,
 }) => {
@@ -43,8 +42,8 @@ const DropdownMenu: FC<DropdownProps> = ({
 	const triggerRef = useRef<HTMLButtonElement>(null);
 
 	useEffect(() => {
-		setValue(defaultChain);
-	}, [defaultChain]);
+		setValue(defaultCoin);
+	}, [defaultCoin]);
 
 	return (
 		<Popover
@@ -56,7 +55,7 @@ const DropdownMenu: FC<DropdownProps> = ({
 					variant='outline'
 					role='combobox'
 					aria-expanded={open}
-					className='w-full min-w-[200px] justify-between capitalize hover:border-white dark:bg-mybackground-dark hover:dark:bg-slate-700'>
+					className='w-full justify-between capitalize hover:border-white dark:bg-mybackground-dark hover:dark:bg-slate-700'>
 					{value || 'Select a Coin'}
 					<ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50 fill-white' />
 				</Button>
@@ -65,17 +64,17 @@ const DropdownMenu: FC<DropdownProps> = ({
 				className='p-0'
 				style={{ width: triggerRef.current?.offsetWidth }}>
 				<Command className='dark:bg-mybackground-dark'>
-					<CommandInput placeholder='Search Chains...' />
+					<CommandInput placeholder='Search Coins...' />
 					<CommandList>
-						<CommandEmpty>No chains found.</CommandEmpty>
+						<CommandEmpty>No Coins found.</CommandEmpty>
 						<CommandGroup>
-							{Object.keys(dropdownValue).map((chainKey, index) => {
+							{coinList.map((chainKey, index) => {
 								return (
 									<CommandItem
 										key={index}
 										value={chainKey}
 										onSelect={(currentValue) => {
-											setValue(currentValue as SolanaChain | EthereumChain);
+											setValue(currentValue as coinTypes);
 											setOpen(false);
 										}}>
 										<Check

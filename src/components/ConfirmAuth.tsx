@@ -1,5 +1,5 @@
 import { FC, useEffect, useRef, useState } from 'react';
-import LoginModal from './home/LoginModal';
+import LoginModal from './home/onboarding/LoginModal';
 import { useAuthStore } from '@/store/auth';
 import { validatePassword } from '@/utils/handleSecretKey';
 import { useModal } from './ui/animated-modal';

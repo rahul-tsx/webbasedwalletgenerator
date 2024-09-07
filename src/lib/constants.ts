@@ -1,3 +1,4 @@
+export const coinList: coinTypes[] = ['solana', 'ethereum'];
 export const coinUnit = {
 	solana: 'SOL',
 	ethereum: 'ETH',

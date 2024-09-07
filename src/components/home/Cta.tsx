@@ -3,15 +3,19 @@ import { motion } from 'framer-motion';
 import { FC, useContext, useRef, useState } from 'react';
 import StatusContext from '@/context/statusContext';
 import { useModal } from '../ui/animated-modal';
-import SetPasswordModal from './SetPasswordModal';
+import SetPasswordModal from './onboarding/SetPasswordModal';
 import bcrypt from 'bcryptjs';
-import LoginModal from './LoginModal';
+import LoginModal from './onboarding/LoginModal';
 import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
-import SelectActionModal from './SelectActionModal';
-import SecretPharseModal from './SecretPharseModal';
+
+import SecretPharseModal from './onboarding/SecretPharseModal';
 import { encryptMnemonic, validatePassword } from '@/utils/handleSecretKey';
-import { deriveWallet } from '@/utils/util';
+import { deriveWallet, previewObject, walletPreview } from '@/utils/util';
+import SelectActionModal from './onboarding/SelectActionModal';
+import ImportWalletWithSecretPharseModal from './onboarding/ImportWalletWithSecretPharseModal';
+import ImportWalletModal from './onboarding/ImportWalletModal';
+import DisplayImportedWalletModal from './onboarding/DisplayImportedWalletModal';
 
 interface CtaProps {}
 
@@ -25,8 +29,19 @@ const Cta: FC<CtaProps> = ({}) => {
 		useModal('onBoarding1');
 	const { closeModal: closeModal4, openModal: openModal4 } =
 		useModal('onBoarding2');
+	const { closeModal: closeModal5, openModal: openModal5 } =
+		useModal('onBoarding3');
+	const { closeModal: closeModal6, openModal: openModal6 } =
+		useModal('onBoarding4');
+	const { closeModal: closeModal7, openModal: openModal7 } =
+		useModal('onBoarding5');
 
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [currentSecretPhrase, setCurrentSecretPhrase] = useState<string | null>(
+		null
+	);
+	const [walletsToImport, setWalletsToImport] = useState<previewObject[]>([]);
+	const [loading, setLoading] = useState(false);
 
 	if (!context) {
 		throw new Error('useContext must be used within a Provider');
@@ -35,6 +50,7 @@ const Cta: FC<CtaProps> = ({}) => {
 	const { changeStatus } = context;
 	const modal1Ref = useRef<HTMLButtonElement>(null);
 	const modal2Ref = useRef<HTMLButtonElement>(null);
+	const modal5Ref = useRef<HTMLButtonElement>(null);
 
 	const { setAuthStatus, setLocalPassword, localPassword } = useAuthStore();
 	const router = useRouter();
@@ -81,15 +97,56 @@ const Cta: FC<CtaProps> = ({}) => {
 		setLocalPassword(password);
 		openModal3();
 	};
-	const handlePrimarySecretKey = (secret: string) => {
+	const setPrimarySecretKey = (secret: string) => {
 		if (localPassword) {
 			const encryptedMnemonic = encryptMnemonic(secret, localPassword);
 			localStorage.setItem('encryptedMnemonic', encryptedMnemonic);
+			return true;
+		}
+		return false;
+	};
+	const handleOnboarding2 = (secret: string) => {
+		if (setPrimarySecretKey(secret)) {
 			deriveWallet(secret);
 			setAuthStatus(true);
 			sessionStorage.setItem('isAuth', 'true');
 			closeModal4();
 			router.push('/wallet');
+		}
+	};
+	const handleImportedKeyPhrase = (mnemonic: string) => {
+		closeModal3();
+		setCurrentSecretPhrase(mnemonic);
+		openModal6();
+	};
+	const handleWalletsToImport = (walletsToImport: previewObject[]) => {
+		closeModal6();
+		openModal7();
+	};
+	const importWallets = () => {
+		setLoading(true);
+		try {
+			if (currentSecretPhrase) {
+				if (setPrimarySecretKey(currentSecretPhrase)) {
+					walletsToImport.map((wallet) =>
+						deriveWallet(currentSecretPhrase, wallet.coin, wallet.index)
+					);
+					setAuthStatus(true);
+					sessionStorage.setItem('isAuth', 'true');
+
+					router.push('/wallet');
+				}
+			} else {
+				localStorage.removeItem('localPassword');
+				router.push('/');
+				changeStatus('Secret Pharse not found', 'error');
+			}
+		} catch (error) {
+			console.log(error);
+			changeStatus('Some Unexpected Error Occured Try Again', 'error');
+		} finally {
+			setLoading(false);
+			closeModal7();
 		}
 	};
 
@@ -101,6 +158,11 @@ const Cta: FC<CtaProps> = ({}) => {
 	const handleModal2Click = () => {
 		if (modal2Ref.current) {
 			modal2Ref.current.click();
+		}
+	};
+	const handleModal5Click = () => {
+		if (modal5Ref.current) {
+			modal5Ref.current.click();
 		}
 	};
 
@@ -117,7 +179,7 @@ const Cta: FC<CtaProps> = ({}) => {
 						y: [20, -5, 0],
 					}}
 					transition={{
-						// delay: 2.5,
+						delay: 2.5,
 						duration: 0.5,
 						ease: [0.4, 0.0, 0.2, 1],
 					}}
@@ -150,7 +212,10 @@ const Cta: FC<CtaProps> = ({}) => {
 					openModal4();
 					closeModal3();
 				}}
-				importWallet={() => console.log('import wallet')}
+				importWallet={() => {
+					openModal5();
+					closeModal3();
+				}}
 			/>
 			<SecretPharseModal
 				modalId='onBoarding2'
@@ -159,7 +224,40 @@ const Cta: FC<CtaProps> = ({}) => {
 					openModal3();
 					closeModal4();
 				}}
-				nextStep={handlePrimarySecretKey}
+				nextStep={handleOnboarding2}
+			/>
+			<ImportWalletWithSecretPharseModal
+				modalId='onBoarding3'
+				closeModal={() => {
+					openModal3();
+					closeModal5();
+				}}
+				nextStep={handleImportedKeyPhrase}
+				modalRef={modal5Ref}
+				handleNextClick={handleModal5Click}
+			/>
+			<ImportWalletModal
+				closeModal={() => {
+					closeModal6();
+					openModal5();
+				}}
+				currentKeyPhrase={currentSecretPhrase!}
+				modalId='onBoarding4'
+				nextStep={handleWalletsToImport}
+				changeStatus={changeStatus}
+				setWalletsToImport={setWalletsToImport}
+				walletsToImport={walletsToImport}
+			/>
+			<DisplayImportedWalletModal
+				closeModal={() => {
+					closeModal7();
+					openModal6();
+				}}
+				modalId='onBoarding5'
+				nextStep={importWallets}
+				setWalletsToImport={setWalletsToImport}
+				walletsToImport={walletsToImport}
+				loading={loading}
 			/>
 		</>
 	);

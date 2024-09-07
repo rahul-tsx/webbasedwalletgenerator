@@ -19,13 +19,13 @@ const WalletPage: FC<WalletPageProps> = ({}) => {
 	const { changeStatus } = context;
 	return (
 		<main className='flex flex-col items-center myContainer justify-between py-10 gap-10 '>
-			<Modal>
+			{/* <Modal>
 				<MnemonicGenrator
 					setMnemonic={setMnemonic}
 					mnemonic={mnemonic}
 					setStatus={changeStatus}
 				/>
-			</Modal>
+			</Modal> */}
 			<Modal>
 				<WalletsSection
 					mnemonic={mnemonic}

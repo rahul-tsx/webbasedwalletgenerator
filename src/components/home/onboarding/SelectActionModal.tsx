@@ -1,6 +1,10 @@
 import { FC } from 'react';
-import { ModalBody, ModalContent, ModalFooter } from '../ui/animated-modal';
-import { Button } from '../ui/button';
+import {
+	ModalBody,
+	ModalContent,
+	ModalFooter,
+} from '@/components/ui/animated-modal';
+import { Button } from '@/components/ui/button';
 
 interface SelectActionModalProps {
 	modalId: string;
