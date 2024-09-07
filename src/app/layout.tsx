@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Provider from '@/providers/Provider';
 import { Toaster } from 'sonner';
+import AuthHandler from '@/components/AuthHandler';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,9 +21,9 @@ export default function RootLayout({
 	return (
 		<html lang='en'>
 			<Provider>
+				<AuthHandler />
 				<body
 					className={`${inter.className} dark:bg-mybackground-dark bg-mybackground-light dark:text-mybackground-light text-mybackground-dark scroll-smooth flex flex-col min-h-screen `}>
-					<Navbar />
 					<div className=''>{children}</div>
 					<Toaster />
 				</body>

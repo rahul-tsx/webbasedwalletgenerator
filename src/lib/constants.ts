@@ -1,9 +1,14 @@
+export const coinList: coinTypes[] = ['solana', 'ethereum'];
 export const coinUnit = {
 	solana: 'SOL',
 	ethereum: 'ETH',
 	bitcoin: 'BTC',
 };
-
+export const basePaths = {
+	solana: `m/44'/501'/x'/0'`,
+	ethereum: `m/44'/60'/0'/0/x`,
+	bitcoin: `m/44'/0'/x'/0/0`,
+};
 export const coinChain: CoinChainType = {
 	solana: {
 		devnet: { name: 'devnet', link: 'https://api.devnet.solana.com' },

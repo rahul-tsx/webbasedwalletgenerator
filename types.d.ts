@@ -24,7 +24,7 @@ interface CoinChainType {
 type variantTypes = 'error' | 'success' | 'warning' | 'default';
 type statusObj = { msg: string; variant: variantTypes };
 
-interface DropdownValue {
+interface DropdownChainValue {
 	[(key in SolanaChain) | (key in EthereumChain)]: ChainDetails;
 }
 interface dollarChart {

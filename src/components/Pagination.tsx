@@ -22,7 +22,6 @@ const Pagination: React.FC<PaginationProps> = ({
 	currentPage,
 	handlePageChange,
 }) => {
-	
 	const renderPaginationSlots = () => {
 		const startSlot = Math.max(
 			currentPage - Math.floor(paginationSlots / 2),
@@ -37,7 +36,7 @@ const Pagination: React.FC<PaginationProps> = ({
 				<div
 					key={pageNumber}
 					className={`h-10 w-10 bg-${
-						pageNumber === currentPage ? 'slate-950' : 'current'
+						pageNumber === currentPage ? 'slate-950' : 'transparent'
 					} rounded-full flex items-center justify-center text-Small font-SemiBold mr-3 border-white border-solid border cursor-pointer`}
 					onClick={() => handlePageChange(pageNumber)}>
 					{pageNumber}

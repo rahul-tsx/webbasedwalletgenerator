@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# VaultChain
 
-## Getting Started
+VaultChain is a web-based cryptocurrency wallet supporting **Solana** and **Ethereum**. It allows users to create unique wallets from a single seed phrase, import existing wallets, airdrop tokens, and more. VaultChain makes it easy to manage your crypto assets across multiple blockchains with a clean and user-friendly interface.
 
-First, run the development server:
+![VaultChain Homepage](image.png)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Features
+
+- **Multi-Chain Support**: Supports wallets for Solana and Ethereum.
+- **Create & Import Wallets**: Generate new wallets or import existing ones using a mnemonic phrase.
+- **Send & Receive**: Transfer Solana, Ethereum, and SPL tokens securely.
+- **Token Creation**: Create unique tokens with metadata like name, symbol, and image.
+- **Airdrop**: Test airdrops for Solana.
+- **Transaction History**: View transaction details and balances.
+- **Security**: Password-protected local storage with bcrypt for password hashing.
+
+## Demo
+
+Check out the live demo [here](https://vaultchain.vercel.app/).
+
+## Tech Stack
+
+- **Frontend**: [Next.js](https://nextjs.org/), [React](https://reactjs.org/)
+- **Blockchain**: Solana, Ethereum
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
+- **Deployment**: [Vercel](https://vercel.com/)
+
+## Installation
+
+### Prerequisites
+
+- Node.js >= 14
+- npm or yarn
+
+### Steps
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/your-username/vaultchain.git
+   ```
+
+2. Navigate to the project directory:
+
+   ```bash
+   cd vaultchain
+   ```
+
+3. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+4. Set up environment variables by creating a `.env.local` file and add necessary keys for Solana and Ethereum networks.
+
+5. Run the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+6. Open your browser and navigate to `http://localhost:3000`.
+
+## Environment Variables
+
+Make sure to set the following environment variables in your `.env.local` file:
+
+```
+NEXT_PUBLIC_ETH_SEPOLIA_PROVIDER_URL="your provider url"
+NEXT_PUBLIC_ETH_HOLESKY_PROVIDER_URL="your provider url"
+NEXT_PUBLIC_ETH_MAINNET_PROVIDER_URL="your provider url"
+NEXT_PUBLIC_ETH_MAINNET_PROVIDER2_URL="extra url"
+NEXT_PUBLIC_SOL_MAINNET_PROVIDER_URL="your provider url"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+<!--
+## Folder Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+``` -->
 
-## Learn More
+## Contributing
 
-To learn more about Next.js, take a look at the following resources:
+If you'd like to contribute to VaultChain, feel free to fork the repository and submit a pull request. We welcome contributions of all kinds, from bug fixes to new features.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+<!-- ## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. -->
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+---

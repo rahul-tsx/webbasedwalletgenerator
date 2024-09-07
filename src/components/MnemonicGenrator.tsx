@@ -52,12 +52,7 @@ const MnemonicGenrator: FC<MnemonicGenratorProps> = ({
 	return (
 		<div className='grid grid-cols-7 w-full '>
 			<div className='col-span-7 grid grid-cols-12 gap-x-5 '>
-				{/* <Input
-					className='col-span-8  rounded-[6px]'
-					type='password'
-					placeholder='Enter your secret pharse (Or leave blank to generate )'
-					onChange={(e) => setMnemonic(e.target.value)}
-				/> */}
+			
 				<button
 					onClick={handleGenerateMnemonic}
 					className=' col-span-4 col-start-5 relative inline-flex overflow-hidden rounded-[6px] p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50'>
