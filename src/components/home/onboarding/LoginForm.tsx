@@ -1,12 +1,5 @@
 'use client';
-import {
-	Dispatch,
-	FC,
-	forwardRef,
-	SetStateAction,
-	useEffect,
-	useState,
-} from 'react';
+import { forwardRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -18,7 +11,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from '@/components/ui/form';
-import { FaCheckCircle } from 'react-icons/fa';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -26,6 +18,8 @@ interface LoginFormProps {
 	closeModal: () => void;
 	nextStep: (password: string) => void;
 	errorMessage: string | null;
+	handleForgotPassword?: () => void;
+	type?: 'default' | 'check';
 }
 
 const getFormSchema = () =>
@@ -36,7 +30,16 @@ const getFormSchema = () =>
 type FormSchema = z.infer<ReturnType<typeof getFormSchema>>;
 
 const LoginForm = forwardRef<HTMLButtonElement, LoginFormProps>(
-	({ closeModal, nextStep, errorMessage }, ref) => {
+	(
+		{
+			closeModal,
+			nextStep,
+			errorMessage,
+			handleForgotPassword,
+			type = 'default',
+		},
+		ref
+	) => {
 		const form = useForm<FormSchema>({
 			resolver: zodResolver(getFormSchema()),
 		});
@@ -76,9 +79,16 @@ const LoginForm = forwardRef<HTMLButtonElement, LoginFormProps>(
 							</FormItem>
 						)}
 					/>
-					<p className='text-center text-sm cursor-pointer hover:underline hover:text-purple-500'>
-						forgot your password
-					</p>
+					{type === 'default' && handleForgotPassword && (
+						<p
+							className='text-center text-sm cursor-pointer hover:underline hover:text-purple-500 w-fit mx-auto'
+							onClick={() => {
+								handleForgotPassword();
+								closeModal();
+							}}>
+							forgot your password
+						</p>
+					)}
 
 					<Button
 						type='submit'

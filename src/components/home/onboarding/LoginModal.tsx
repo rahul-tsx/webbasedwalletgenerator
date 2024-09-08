@@ -14,6 +14,7 @@ interface LoginModalProps {
 	nextStep: (password: string) => void;
 	errorMessage: string | null;
 	type?: 'default' | 'check';
+	handleForgotPassword?: () => void;
 }
 
 const LoginModal: FC<LoginModalProps> = ({
@@ -24,6 +25,7 @@ const LoginModal: FC<LoginModalProps> = ({
 	nextStep,
 	errorMessage,
 	type = 'default',
+	handleForgotPassword,
 }) => {
 	return (
 		<ModalBody
@@ -40,6 +42,8 @@ const LoginModal: FC<LoginModalProps> = ({
 					nextStep={nextStep}
 					ref={modal2Ref}
 					errorMessage={errorMessage}
+					handleForgotPassword={handleForgotPassword}
+					type={type}
 				/>
 			</ModalContent>
 			<ModalFooter className='gap-4 '>

@@ -16,6 +16,7 @@ import SelectActionModal from './onboarding/SelectActionModal';
 import ImportWalletWithSecretPharseModal from './onboarding/ImportWalletWithSecretPharseModal';
 import ImportWalletModal from './onboarding/ImportWalletModal';
 import DisplayImportedWalletModal from './onboarding/DisplayImportedWalletModal';
+import ForgotPasswordModal from './onboarding/ForgotPasswordModal';
 
 interface CtaProps {}
 
@@ -35,6 +36,9 @@ const Cta: FC<CtaProps> = ({}) => {
 		useModal('onBoarding4');
 	const { closeModal: closeModal7, openModal: openModal7 } =
 		useModal('onBoarding5');
+	const { closeModal: closeModal8, openModal: openModal8 } = useModal(
+		'forgotPasswordModal3'
+	);
 
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [currentSecretPhrase, setCurrentSecretPhrase] = useState<string | null>(
@@ -51,6 +55,7 @@ const Cta: FC<CtaProps> = ({}) => {
 	const modal1Ref = useRef<HTMLButtonElement>(null);
 	const modal2Ref = useRef<HTMLButtonElement>(null);
 	const modal5Ref = useRef<HTMLButtonElement>(null);
+	const modal8Ref = useRef<HTMLButtonElement>(null);
 
 	const { setAuthStatus, setLocalPassword, localPassword } = useAuthStore();
 	const router = useRouter();
@@ -149,6 +154,13 @@ const Cta: FC<CtaProps> = ({}) => {
 			closeModal7();
 		}
 	};
+	const handleForgotPassword = () => {
+		setLocalPassword('');
+		setAuthStatus(false);
+		sessionStorage.clear();
+		localStorage.clear();
+		closeModal8();
+	};
 
 	const handleModal1Click = () => {
 		if (modal1Ref.current) {
@@ -205,6 +217,7 @@ const Cta: FC<CtaProps> = ({}) => {
 				onCancel={closeModal2}
 				nextStep={handlePasswordCheck}
 				errorMessage={errorMessage}
+				handleForgotPassword={openModal8}
 			/>
 			<SelectActionModal
 				modalId={'onBoarding1'}
@@ -258,6 +271,15 @@ const Cta: FC<CtaProps> = ({}) => {
 				setWalletsToImport={setWalletsToImport}
 				walletsToImport={walletsToImport}
 				loading={loading}
+			/>
+			<ForgotPasswordModal
+				closeModal={() => {
+					closeModal8();
+					openModal2();
+				}}
+				modalId='forgotPasswordModal3'
+				nextStep={handleForgotPassword}
+				setStatus={changeStatus}
 			/>
 		</>
 	);
