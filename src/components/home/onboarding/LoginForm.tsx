@@ -13,13 +13,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { TriangleAlertIcon } from 'lucide-react';
 
 interface LoginFormProps {
 	closeModal: () => void;
 	nextStep: (password: string) => void;
 	errorMessage: string | null;
 	handleForgotPassword?: () => void;
-	type?: 'default' | 'check';
+	type?: 'default' | 'check' | 'reauth';
 }
 
 const getFormSchema = () =>
@@ -61,6 +62,30 @@ const LoginForm = forwardRef<HTMLButtonElement, LoginFormProps>(
 								<div className='text-white text-2xl text-center'>
 									Enter your Password
 								</div>
+
+								{type === 'check' && (
+									<div className='flex flex-col gap-5'>
+										<h1 className='text-center'>
+											On the next Page you will receive your secret
+										</h1>
+										<div className='flex flex-col text-red-500 gap-5 items-center font-semibold max-w-[500px] mx-auto'>
+											<div className='grid grid-cols-9 space-x-5 bg-slate-900 rounded-md p-5'>
+												<TriangleAlertIcon
+													size={25}
+													className='col-span-1'
+												/>
+												<p className='col-span-8'>{`Your private key/secrets gives full access to your wallet. Keep it secure to prevent unauthorized access to your funds.`}</p>
+											</div>
+											<div className='grid grid-cols-9 space-x-5 bg-slate-900  rounded-md p-5 '>
+												<TriangleAlertIcon
+													size={25}
+													className='col-span-1'
+												/>
+												<p className='col-span-8'>{` Do not enter your private key/secrets on untrusted apps or websites. Always keep it private and safe.`}</p>
+											</div>
+										</div>
+									</div>
+								)}
 								<FormControl>
 									<div>
 										<Input
@@ -68,7 +93,9 @@ const LoginForm = forwardRef<HTMLButtonElement, LoginFormProps>(
 											autoComplete='off'
 											{...field}
 											className=''
-											containerClass='lg:w-1/2 w-full mx-auto mt-10'
+											containerClass={`${
+												type === 'check' ? '' : 'lg:w-1/2 '
+											} w-full max-w-[500px] mx-auto mt-10 `}
 											isPassword
 										/>
 									</div>

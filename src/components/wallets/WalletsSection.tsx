@@ -14,7 +14,7 @@ import AlertBox from '../AlertBox';
 import WalletList from './WalletList';
 import AddNewWalletModal from './AddNewWalletModal';
 import { deriveWallet } from '@/utils/util';
-import { decryptMnemonic } from '@/utils/handleSecretKey';
+import { decryptData } from '@/utils/handleSecretKey';
 import { useAuthStore } from '@/store/auth';
 
 interface WalletsSectionProps {
@@ -59,28 +59,34 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 		coinType: coinTypes;
 		walletName: string;
 	}) => {
-		const storedEncryptedMnemonic = localStorage.getItem('encryptedMnemonic');
+		try {
+			const storedEncryptedMnemonic = localStorage.getItem('encryptedMnemonic');
 
-		if (!storedEncryptedMnemonic) {
-			setStatus('Menumonic Deleted create new one', 'warning');
-			return;
+			if (!storedEncryptedMnemonic) {
+				setStatus('Menumonic Deleted create new one', 'warning');
+				return;
+			}
+
+			const decryptedMnemonic = decryptData(
+				storedEncryptedMnemonic,
+				localPassword!
+			);
+
+			const { index: currentIndex, updatedWallets } = deriveWallet(
+				decryptedMnemonic!,
+				localPassword!,
+				coinType,
+				index,
+				walletName
+			);
+
+			setWallets(updatedWallets);
+			setIndex(currentIndex);
+			closeModal();
+		} catch (error) {
+			console.log(error);
+			setStatus('An Unexpected Error Occured', 'error');
 		}
-
-		const decryptedMnemonic = decryptMnemonic(
-			storedEncryptedMnemonic,
-			localPassword!
-		);
-
-		const { index: currentIndex, updatedWallets } = deriveWallet(
-			decryptedMnemonic!,
-			coinType,
-			index,
-			walletName
-		);
-
-		setWallets(updatedWallets);
-		setIndex(currentIndex);
-		closeModal();
 	};
 
 	const retrieveWallets = () => {
@@ -134,7 +140,6 @@ const WalletsSection: FC<WalletsSectionProps> = ({ mnemonic, setStatus }) => {
 				handleSubmitClick={handleSubmitClick}
 				index={index}
 				closeModal={closeModal}
-				
 			/>
 			<AlertBox
 				open={deleteAlert}

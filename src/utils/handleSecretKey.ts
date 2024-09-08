@@ -1,18 +1,18 @@
 import bcrypt from 'bcryptjs';
 import CryptoJS from 'crypto-js';
 
-export const encryptMnemonic = (mnemonic: string, password: string): string => {
-	return CryptoJS.AES.encrypt(mnemonic, password).toString();
+export const encryptData = (data: string, password: string): string => {
+	return CryptoJS.AES.encrypt(data, password).toString();
 };
 
-export const decryptMnemonic = (
-	encryptedMnemonic: string,
+export const decryptData = (
+	encryptedData: string,
 	password: string
 ): string | null => {
 	try {
-		const bytes = CryptoJS.AES.decrypt(encryptedMnemonic, password);
-		const decryptedMnemonic = bytes.toString(CryptoJS.enc.Utf8);
-		return decryptedMnemonic;
+		const bytes = CryptoJS.AES.decrypt(encryptedData, password);
+		const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+		return decryptedData;
 	} catch (e) {
 		console.error('Decryption failed:', e);
 		return null;

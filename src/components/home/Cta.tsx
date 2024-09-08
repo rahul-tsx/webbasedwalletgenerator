@@ -10,7 +10,7 @@ import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 
 import SecretPharseModal from './onboarding/SecretPharseModal';
-import { encryptMnemonic, validatePassword } from '@/utils/handleSecretKey';
+import { encryptData, validatePassword } from '@/utils/handleSecretKey';
 import { deriveWallet, previewObject, walletPreview } from '@/utils/util';
 import SelectActionModal from './onboarding/SelectActionModal';
 import ImportWalletWithSecretPharseModal from './onboarding/ImportWalletWithSecretPharseModal';
@@ -55,7 +55,6 @@ const Cta: FC<CtaProps> = ({}) => {
 	const modal1Ref = useRef<HTMLButtonElement>(null);
 	const modal2Ref = useRef<HTMLButtonElement>(null);
 	const modal5Ref = useRef<HTMLButtonElement>(null);
-	const modal8Ref = useRef<HTMLButtonElement>(null);
 
 	const { setAuthStatus, setLocalPassword, localPassword } = useAuthStore();
 	const router = useRouter();
@@ -104,19 +103,23 @@ const Cta: FC<CtaProps> = ({}) => {
 	};
 	const setPrimarySecretKey = (secret: string) => {
 		if (localPassword) {
-			const encryptedMnemonic = encryptMnemonic(secret, localPassword);
+			const encryptedMnemonic = encryptData(secret, localPassword);
 			localStorage.setItem('encryptedMnemonic', encryptedMnemonic);
 			return true;
 		}
 		return false;
 	};
 	const handleOnboarding2 = (secret: string) => {
-		if (setPrimarySecretKey(secret)) {
-			deriveWallet(secret);
-			setAuthStatus(true);
-			sessionStorage.setItem('isAuth', 'true');
-			closeModal4();
-			router.push('/wallet');
+		try {
+			if (setPrimarySecretKey(secret)) {
+				deriveWallet(secret, localPassword!);
+				setAuthStatus(true);
+				sessionStorage.setItem('isAuth', 'true');
+				closeModal4();
+				router.push('/wallet');
+			}
+		} catch (error) {
+			console.log(error);
 		}
 	};
 	const handleImportedKeyPhrase = (mnemonic: string) => {
@@ -134,7 +137,12 @@ const Cta: FC<CtaProps> = ({}) => {
 			if (currentSecretPhrase) {
 				if (setPrimarySecretKey(currentSecretPhrase)) {
 					walletsToImport.map((wallet) =>
-						deriveWallet(currentSecretPhrase, wallet.coin, wallet.index)
+						deriveWallet(
+							currentSecretPhrase,
+							localPassword!,
+							wallet.coin,
+							wallet.index
+						)
 					);
 					setAuthStatus(true);
 					sessionStorage.setItem('isAuth', 'true');

@@ -88,12 +88,15 @@ const WalletDetailContainer: FC<WalletDetailContainerProps> = ({
 
 	return (
 		<div className='w-full flex flex-col gap-10'>
-			<WalletInfo
-				wallet={wallet!}
-				tokenBalance={tokenBalance}
-				valueBalance={valueBalance}
-				fetchBalance={fetchBalance}
-			/>
+			<Modal>
+				<WalletInfo
+					wallet={wallet!}
+					tokenBalance={tokenBalance}
+					valueBalance={valueBalance}
+					fetchBalance={fetchBalance}
+				/>
+			</Modal>
+
 			<Modal>
 				<WalletAction
 					wallet={wallet!}

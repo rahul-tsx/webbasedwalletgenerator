@@ -98,7 +98,7 @@ export const HoverEffect = ({
 								</div>
 							</p>
 
-							<div className='flex flex-col mt-2'>
+							{/* <div className='flex flex-col mt-2'>
 								<div className='grid grid-cols-6  w-full space-x-5'>
 									<label className='text-xl font-bold  text-white'>
 										Private Key:
@@ -130,7 +130,7 @@ export const HoverEffect = ({
 										)}
 									</button>
 								</div>
-							</div>
+							</div> */}
 
 							{item.coinType && (
 								<p className='flex flex-col items-start'>
