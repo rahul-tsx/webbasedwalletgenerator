@@ -54,7 +54,7 @@ const ConfirmAuth: FC<ConfirmAuthProps> = ({ onSuccess, open, onExit }) => {
 				closeModal1();
 				onExit();
 			}}
-			type='check'
+			type='reauth'
 			modal2Ref={modal2Ref}
 		/>
 	);

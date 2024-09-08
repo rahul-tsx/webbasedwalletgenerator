@@ -22,10 +22,9 @@ const Navbar: FC<NavbarProps> = ({ type = 'default' }) => {
 	const { changeStatus } = context;
 	const handleLogout = () => {
 		sessionStorage.setItem('isLoggingOut', 'true');
-		sessionStorage.removeItem('isAuth');
-		setAuthStatus(false);
-		changeStatus('Logged Out Successfully!', 'success');
 		router.push('/');
+		sessionStorage.removeItem('isAuth');
+		changeStatus('Logged Out Successfully!', 'success');
 	};
 	return (
 		<header className=' w-full'>

@@ -1,11 +1,16 @@
 import StatusContext from '@/context/statusContext';
-import { FC, useContext, useState } from 'react';
+import { FC, useContext, useEffect, useRef, useState } from 'react';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import RefreshButton from '../ui/refresh-button';
 import TooltipComponent from '../TooltipComponent';
 import { digitConverter } from '@/utils/digitConverter';
 import { coinUnit } from '@/lib/constants';
+import { Button } from '../ui/button';
+import { useModal } from '../ui/animated-modal';
+import LoginModal from '../home/onboarding/LoginModal';
+import { decryptData, validatePassword } from '@/utils/handleSecretKey';
+import ShowPrivKeyModal from './ShowPrivKeyModal';
 
 interface WalletInfoProps {
 	wallet: Wallet;
@@ -22,6 +27,22 @@ const WalletInfo: FC<WalletInfoProps> = ({
 	const [visibleBalance, setVisibleBalance] = useState(false);
 	const [visiblePkey, setVisiblePkey] = useState(false);
 	const [visibleTokenBalance, setVisibleTokenBalance] = useState(false);
+	const [decryptedPrivateKey, setDecryptedPrivateKey] = useState<string | null>(
+		null
+	);
+	const { closeModal: closeModal1, openModal: openModal1 } = useModal(
+		'showPrivateKeyModal1'
+	);
+	const { closeModal: closeModal2, openModal: openModal2 } = useModal(
+		'showPrivateKeyModal2'
+	);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const modal1Ref = useRef<HTMLButtonElement>(null);
+	const handleModal1Click = () => {
+		if (modal1Ref.current) {
+			modal1Ref.current.click();
+		}
+	};
 
 	const toggleVisibleBalance = () => {
 		setVisibleBalance((prev) => !prev);
@@ -40,6 +61,28 @@ const WalletInfo: FC<WalletInfoProps> = ({
 		}
 		return path;
 	};
+	const handlePasswordCheck = async (password: string) => {
+		const hash = localStorage.getItem('localPassword');
+
+		if (hash) {
+			const isPasswordValid = await validatePassword(password, hash);
+			if (isPasswordValid) {
+				const decryptedPrivKey = decryptData(wallet.privateKey, password);
+				setDecryptedPrivateKey(decryptedPrivKey);
+				closeModal1();
+				setErrorMessage(null);
+			} else {
+				setErrorMessage('Wrong password. Try Again !!!');
+			}
+		} else {
+			setErrorMessage('No password found');
+			closeModal1();
+		}
+	};
+	useEffect(() => {
+		if (decryptedPrivateKey) openModal2();
+	}, [decryptedPrivateKey]);
+
 	const context = useContext(StatusContext);
 
 	if (!context) {
@@ -181,7 +224,7 @@ const WalletInfo: FC<WalletInfoProps> = ({
 					Private Key
 				</label>
 
-				{wallet && (
+				{/* {wallet && (
 					<div className='col-span-4 flex items-center'>
 						<CopyToClipboard
 							text={wallet.privateKey}
@@ -198,7 +241,8 @@ const WalletInfo: FC<WalletInfoProps> = ({
 							{visiblePkey ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
 						</button>
 					</div>
-				)}
+				)} */}
+				<Button onClick={openModal1}>Show Private Key</Button>
 			</div>
 			<div className='grid grid-cols-6 col-span-8  w-full space-x-5 items-center'>
 				<label className='text-xl font-bold text-white col-span-1'>
@@ -208,7 +252,7 @@ const WalletInfo: FC<WalletInfoProps> = ({
 				{wallet && (
 					<div className='col-span-4 flex items-center'>
 						<CopyToClipboard
-							text={wallet.publicKey}
+							text={derivePath(wallet.coinType, wallet.pathIndex)}
 							onCopy={() =>
 								changeStatus('Derivation Path Copied to Clipboard!', 'success')
 							}>
@@ -219,6 +263,24 @@ const WalletInfo: FC<WalletInfoProps> = ({
 					</div>
 				)}
 			</div>
+			<LoginModal
+				modalId={'showPrivateKeyModal1'}
+				handleNextClick={handleModal1Click}
+				modal2Ref={modal1Ref}
+				onCancel={closeModal1}
+				nextStep={handlePasswordCheck}
+				errorMessage={errorMessage}
+				type='check'
+			/>
+			<ShowPrivKeyModal
+				modalId={'showPrivateKeyModal2'}
+				privKey={decryptedPrivateKey!}
+				setStatus={changeStatus}
+				closeModal={() => {
+					closeModal2();
+					setDecryptedPrivateKey(null);
+				}}
+			/>
 		</div>
 	);
 };

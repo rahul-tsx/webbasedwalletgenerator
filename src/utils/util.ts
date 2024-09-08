@@ -3,9 +3,12 @@ import { mnemonicToSeedSync } from 'bip39';
 import { deriveSolanaWallet, getSolBalance } from './solanaValidation';
 import { deriveEthereumWallet, getEthBalance } from './ethereumValidation';
 import { v4 as uuidv4 } from 'uuid';
+import { encryptData, validatePassword } from './handleSecretKey';
+import { SetStateAction, Dispatch } from 'react';
 
 export const deriveWallet = (
 	mnemonic: string,
+	localPassword: string,
 	coinType: coinTypes = 'solana',
 	index: number = 0,
 	walletName: string = `Wallet ${index + 1}`
@@ -43,10 +46,11 @@ export const deriveWallet = (
 			// publicKey = ck.publicAddress;
 			// privateKey = ck.privateKey.toString('hex');
 		}
+		const encryptedPrivKey = encryptData(privateKey, localPassword);
 
 		newWallet = {
 			publicKey,
-			privateKey,
+			privateKey: encryptedPrivKey,
 			coinType,
 			name: walletName,
 			id: uuidv4(),
@@ -96,7 +100,6 @@ export const walletPreview = async (
 	const seed = mnemonicToSeedSync(mnemonic);
 
 	let publicKey: string = '';
-	let privateKey: string = '';
 	let solWalletPreview: previewObject[] = [];
 	let ethWalletPreview: previewObject[] = [];
 	if (index) {
@@ -104,7 +107,6 @@ export const walletPreview = async (
 			basePaths.solana.replace('x', index.toString()),
 			seed
 		);
-		privateKey = solwallet.privateKey;
 		publicKey = solwallet.publicKey;
 		const solBalance = await getSolBalance(publicKey);
 		solWalletPreview.push({
@@ -117,7 +119,6 @@ export const walletPreview = async (
 			seed,
 			basePaths.ethereum.replace('x', index.toString())
 		);
-		privateKey = ethereumWallet.privateKey;
 		publicKey = ethereumWallet.address;
 		const ethBalance = await getEthBalance(publicKey);
 		ethWalletPreview.push({
@@ -133,7 +134,6 @@ export const walletPreview = async (
 			basePaths.solana.replace('x', i.toString()),
 			seed
 		);
-		privateKey = solwallet.privateKey;
 		publicKey = solwallet.publicKey;
 		const solBalance = await getSolBalance(publicKey);
 		solWalletPreview.push({
@@ -148,7 +148,6 @@ export const walletPreview = async (
 			seed,
 			basePaths.ethereum.replace('x', i.toString())
 		);
-		privateKey = ethereumWallet.privateKey;
 		publicKey = ethereumWallet.address;
 		const ethBalance = await getEthBalance(publicKey);
 		ethWalletPreview.push({
@@ -158,6 +157,8 @@ export const walletPreview = async (
 			coin: 'ethereum',
 		});
 	}
-	
+
 	return { solWalletPreview, ethWalletPreview };
 };
+
+

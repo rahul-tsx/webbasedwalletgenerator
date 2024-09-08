@@ -10,12 +10,13 @@ import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 
 import SecretPharseModal from './onboarding/SecretPharseModal';
-import { encryptMnemonic, validatePassword } from '@/utils/handleSecretKey';
+import { encryptData, validatePassword } from '@/utils/handleSecretKey';
 import { deriveWallet, previewObject, walletPreview } from '@/utils/util';
 import SelectActionModal from './onboarding/SelectActionModal';
 import ImportWalletWithSecretPharseModal from './onboarding/ImportWalletWithSecretPharseModal';
 import ImportWalletModal from './onboarding/ImportWalletModal';
 import DisplayImportedWalletModal from './onboarding/DisplayImportedWalletModal';
+import ForgotPasswordModal from './onboarding/ForgotPasswordModal';
 
 interface CtaProps {}
 
@@ -35,6 +36,9 @@ const Cta: FC<CtaProps> = ({}) => {
 		useModal('onBoarding4');
 	const { closeModal: closeModal7, openModal: openModal7 } =
 		useModal('onBoarding5');
+	const { closeModal: closeModal8, openModal: openModal8 } = useModal(
+		'forgotPasswordModal3'
+	);
 
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [currentSecretPhrase, setCurrentSecretPhrase] = useState<string | null>(
@@ -99,19 +103,23 @@ const Cta: FC<CtaProps> = ({}) => {
 	};
 	const setPrimarySecretKey = (secret: string) => {
 		if (localPassword) {
-			const encryptedMnemonic = encryptMnemonic(secret, localPassword);
+			const encryptedMnemonic = encryptData(secret, localPassword);
 			localStorage.setItem('encryptedMnemonic', encryptedMnemonic);
 			return true;
 		}
 		return false;
 	};
 	const handleOnboarding2 = (secret: string) => {
-		if (setPrimarySecretKey(secret)) {
-			deriveWallet(secret);
-			setAuthStatus(true);
-			sessionStorage.setItem('isAuth', 'true');
-			closeModal4();
-			router.push('/wallet');
+		try {
+			if (setPrimarySecretKey(secret)) {
+				deriveWallet(secret, localPassword!);
+				setAuthStatus(true);
+				sessionStorage.setItem('isAuth', 'true');
+				closeModal4();
+				router.push('/wallet');
+			}
+		} catch (error) {
+			console.log(error);
 		}
 	};
 	const handleImportedKeyPhrase = (mnemonic: string) => {
@@ -129,7 +137,12 @@ const Cta: FC<CtaProps> = ({}) => {
 			if (currentSecretPhrase) {
 				if (setPrimarySecretKey(currentSecretPhrase)) {
 					walletsToImport.map((wallet) =>
-						deriveWallet(currentSecretPhrase, wallet.coin, wallet.index)
+						deriveWallet(
+							currentSecretPhrase,
+							localPassword!,
+							wallet.coin,
+							wallet.index
+						)
 					);
 					setAuthStatus(true);
 					sessionStorage.setItem('isAuth', 'true');
@@ -148,6 +161,13 @@ const Cta: FC<CtaProps> = ({}) => {
 			setLoading(false);
 			closeModal7();
 		}
+	};
+	const handleForgotPassword = () => {
+		setLocalPassword('');
+		setAuthStatus(false);
+		sessionStorage.clear();
+		localStorage.clear();
+		closeModal8();
 	};
 
 	const handleModal1Click = () => {
@@ -205,6 +225,7 @@ const Cta: FC<CtaProps> = ({}) => {
 				onCancel={closeModal2}
 				nextStep={handlePasswordCheck}
 				errorMessage={errorMessage}
+				handleForgotPassword={openModal8}
 			/>
 			<SelectActionModal
 				modalId={'onBoarding1'}
@@ -258,6 +279,15 @@ const Cta: FC<CtaProps> = ({}) => {
 				setWalletsToImport={setWalletsToImport}
 				walletsToImport={walletsToImport}
 				loading={loading}
+			/>
+			<ForgotPasswordModal
+				closeModal={() => {
+					closeModal8();
+					openModal2();
+				}}
+				modalId='forgotPasswordModal3'
+				nextStep={handleForgotPassword}
+				setStatus={changeStatus}
 			/>
 		</>
 	);
