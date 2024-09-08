@@ -208,7 +208,7 @@ const WalletInfo: FC<WalletInfoProps> = ({
 				{wallet && (
 					<div className='col-span-4 flex items-center'>
 						<CopyToClipboard
-							text={wallet.publicKey}
+							text={derivePath(wallet.coinType, wallet.pathIndex)}
 							onCopy={() =>
 								changeStatus('Derivation Path Copied to Clipboard!', 'success')
 							}>
